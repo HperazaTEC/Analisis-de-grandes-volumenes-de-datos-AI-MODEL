@@ -1,0 +1,28 @@
+# --- Core Spark & Data Engineering ---
+pyspark==3.5.1           # Procesamiento distribuido
+pyarrow==15.0.2          # Columnar storage (Parquet)
+
+# --- Tracking & MLOps ---
+mlflow==2.13.0
+dvc==3.43.0
+dvc[s3]==3.43.0          # Remote en MinIO/S3
+boto3==1.34.89           # SDK AWS / MinIO
+
+# --- Ciencia de datos / ML auxiliar ---
+pandas==2.2.2
+numpy==1.26.4
+scikit-learn==1.4.2      # Métricas y modelos fuera de Spark
+optuna==3.5.0            # HPO opcional
+joblib==1.4.2            # Serialización utilitaria
+matplotlib==3.8.4        # Gráficas rápidas
+
+# --- Serving API ---
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+pydantic==2.7.1          # Validación de inputs
+minio==7.2.2             # Cliente directo a MinIO
+s3fs==2024.3.1           # File-system S3 para pandas/pyarrow
+
+# --- Dev & Testing ---
+pytest==8.2.0
+python-dotenv==1.0.1     # Variables de entorno locales
