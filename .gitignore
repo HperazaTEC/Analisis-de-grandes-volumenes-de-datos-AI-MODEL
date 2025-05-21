@@ -1,0 +1,13 @@
+# Bytecode
+__pycache__/
+*.py[cod]
+
+# Data artifacts
+/data/raw/
+/data/processed/
+/models/
+/mlruns/
+/metrics/
+
+# Environment
+.env
