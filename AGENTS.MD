@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Crear un sistema de *machine learning* de punta a punta que prediga la probabilidad de incumplimiento y segmente perfiles de prestatarios usando los datos históricos de Lending Club (2007-2020 Q3). El proyecto utiliza **PySpark** para procesamiento distribuido, **MLflow** para trazabilidad de experimentos y **DVC** para control de versiones de datos/modelos, todo dentro de una arquitectura **dockerizada** basada en principios de **MLOps**.
+Crear un sistema de *machine learning* de punta a punta que prediga la probabilidad de incumplimiento y segmente perfiles de prestatarios usando los datos históricos de Lending Club (2007-2020 Q3). El proyecto utiliza **PySpark** para procesamiento distribuido, **MLflow** para trazabilidad de experimentos y **DVC** para control de versiones de datos/modelos, todo dentro de una arquitectura **dockerizada** basada en principios de **MLOps**. (BALANCEA LAS CLASES)
 
 > El conjunto original contiene **≈ 2.9 M** registros y **142** variables, con \~26 % de valores nulos y outliers relevantes. fileciteturn0file0
 
