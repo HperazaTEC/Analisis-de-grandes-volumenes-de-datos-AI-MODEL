@@ -26,3 +26,4 @@ s3fs==2024.3.1           # File-system S3 para pandas/pyarrow
 # --- Dev & Testing ---
 pytest==8.2.0
 python-dotenv==1.0.1     # Variables de entorno locales
+kaggle==1.5.16
