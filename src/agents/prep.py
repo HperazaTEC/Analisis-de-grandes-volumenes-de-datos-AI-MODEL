@@ -1,10 +1,13 @@
+
 """Clean raw LendingClub data and create stratified sample."""
+
 from pyspark.sql import functions as F
 from pyspark.sql.types import DoubleType, IntegerType
 from utils.spark import get_spark
 from pathlib import Path
 from dotenv import load_dotenv
 import os
+
 
 
 def winsorize(df, cols, lower=0.01, upper=0.99):
@@ -62,6 +65,7 @@ def main() -> None:
     fractions = {s: 0.10 for s in strata}
     sample = df.sampleBy("grade_status", fractions, seed=42)
     sample.write.mode("overwrite").parquet(str(proc_dir / "sample_M.parquet"))
+
 
 
 

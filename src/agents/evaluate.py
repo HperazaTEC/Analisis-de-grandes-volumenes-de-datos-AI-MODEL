@@ -8,7 +8,9 @@ from utils.spark import get_spark
 
 
 def main() -> None:
+
     load_dotenv()
+
     spark = get_spark("evaluate")
     test = spark.read.parquet("data/processed/test.parquet")
     client = MlflowClient()

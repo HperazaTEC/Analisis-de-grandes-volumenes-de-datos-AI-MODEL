@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 
 def main() -> None:
     load_dotenv()
+
     mlflow.spark.autolog(log_models=True)
     spark = get_spark("train_sup")
     train = spark.read.parquet("data/processed/train.parquet")

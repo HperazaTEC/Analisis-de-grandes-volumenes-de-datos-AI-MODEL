@@ -11,7 +11,9 @@ directory.
 
 ```bash
 # Pull the data and start services
+
 $ cp .env.example .env   # edit with your Kaggle credentials
+
 $ dvc pull
 $ docker compose -f docker/docker-compose.yml up -d
 

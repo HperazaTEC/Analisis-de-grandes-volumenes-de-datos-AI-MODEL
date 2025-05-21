@@ -4,7 +4,9 @@ stages:
     deps:
       - src/agents/fetch.py
     outs:
+
       - data/raw/Loan_status_2007-2020Q3.gzip
+
 
   prep:
     cmd: python src/agents/prep.py
@@ -14,6 +16,7 @@ stages:
     outs:
       - data/processed/M.parquet
       - data/processed/sample_M.parquet
+
 
   split:
     cmd: python src/agents/split.py

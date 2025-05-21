@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 def main() -> None:
     load_dotenv()
+
     client = MlflowClient()
     runs = mlflow.search_runs(order_by=["metrics.auc DESC"], max_results=1)
     if not runs.empty:
