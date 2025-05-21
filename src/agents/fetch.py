@@ -1,17 +1,31 @@
-"""Download raw data from an S3/MinIO bucket."""
+
+"""Download raw LendingClub data from Kaggle."""
 from pathlib import Path
 import os
-import boto3
+from dotenv import load_dotenv
+from kaggle import api
+import zipfile
 
 
 def main() -> None:
-    bucket = os.environ.get("DATA_BUCKET", "lending-data")
-    key = os.environ.get("DATA_KEY", "lending_club.csv")
-    dest = Path("data/raw/lending_club.csv")
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    endpoint = os.environ.get("S3_ENDPOINT_URL")
-    s3 = boto3.client("s3", endpoint_url=endpoint)
-    s3.download_file(bucket, key, str(dest))
+    load_dotenv()
+    dataset = os.environ.get("KAGGLE_DATASET")
+    file_name = os.environ.get("KAGGLE_FILE", "Loan_status_2007-2020Q3.gzip")
+    raw_dir = Path("data/raw")
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    out_path = raw_dir / file_name
+
+    if out_path.exists():
+        return
+
+    api.authenticate()
+    api.dataset_download_file(dataset, file_name, path=str(raw_dir), force=True)
+    zip_path = raw_dir / f"{file_name}.zip"
+    if zip_path.exists():
+        with zipfile.ZipFile(zip_path) as z:
+            z.extractall(path=raw_dir)
+        zip_path.unlink()
+
 
 
 if __name__ == "__main__":

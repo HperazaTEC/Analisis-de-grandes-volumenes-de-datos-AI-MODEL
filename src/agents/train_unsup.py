@@ -5,9 +5,12 @@ from pyspark.ml import Pipeline
 from utils.spark import get_spark
 import mlflow
 from pathlib import Path
+from dotenv import load_dotenv
 
 
 def main() -> None:
+    load_dotenv()
+
     mlflow.spark.autolog(log_models=True)
     spark = get_spark("train_unsup")
     train = spark.read.parquet("data/processed/train.parquet")

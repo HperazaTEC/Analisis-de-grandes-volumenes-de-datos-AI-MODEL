@@ -1,12 +1,16 @@
 """Evaluate the best supervised model on the test set."""
 from pathlib import Path
 import mlflow
+from dotenv import load_dotenv
 from mlflow.tracking import MlflowClient
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
 from utils.spark import get_spark
 
 
 def main() -> None:
+
+    load_dotenv()
+
     spark = get_spark("evaluate")
     test = spark.read.parquet("data/processed/test.parquet")
     client = MlflowClient()

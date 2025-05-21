@@ -10,7 +10,7 @@ Crear un sistema de *machine learning* de punta a punta que prediga la probabili
 
 | Fuente                            | Descripción                                                                                                                                               |
 | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `data/raw/lending_club.csv`       | Dataset Lending Club completo.                                                                                                                            |
+| `data/raw/Loan_status_2007-2020Q3.gzip`       | Dataset Lending Club completo descargado desde Kaggle.                                                                                                                            |
 | `data/processed/sample_M.parquet` | Muestra estratificada construida con 68 estratos `grade × loan_status`, siguiendo la técnica documentada en el informe de muestreo. fileciteturn0file1 |
 
 ## Arquitectura general
