@@ -58,7 +58,14 @@ def main() -> None:
     )
     df = winsorize(df, numerical_vars)
 
-    df.write.mode("overwrite").parquet(str(proc_dir / "M.parquet"))
+    # Limit parallelism when writing to Parquet to prevent OOM without shuffling
+    (
+        df.coalesce(8)
+        .write
+        .option("maxRecordsPerFile", 250000)
+        .mode("overwrite")
+        .parquet(str(proc_dir / "M.parquet"))
+    )
 
     # 10 % stratified sample for exploratory analysis
     strata = [r[0] for r in df.select("grade_status").distinct().collect()]
