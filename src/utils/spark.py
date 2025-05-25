@@ -8,5 +8,6 @@ def get_spark(app_name: str = "credit-risk") -> SparkSession:
         .appName(app_name)
         .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         .config("spark.kryoserializer.buffer.max", "512m")
+
         .getOrCreate()
     )

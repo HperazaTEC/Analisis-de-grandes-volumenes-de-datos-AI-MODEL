@@ -2,7 +2,7 @@
 from pyspark.ml.clustering import KMeans, GaussianMixture
 from pyspark.ml.feature import VectorAssembler, StandardScaler
 from pyspark.ml import Pipeline
-from utils.spark import get_spark
+from src.utils.spark import get_spark
 import mlflow
 from pathlib import Path
 from dotenv import load_dotenv
@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 def main() -> None:
     load_dotenv()
 
-    mlflow.spark.autolog(log_models=True)
+    mlflow.spark.autolog()
     spark = get_spark("train_unsup")
     train = spark.read.parquet("data/processed/train.parquet")
     feature_cols = [c for c in train.columns if c not in {"default_flag", "weight"}]

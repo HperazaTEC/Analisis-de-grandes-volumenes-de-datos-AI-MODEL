@@ -127,6 +127,8 @@ Consulte `AGENTS.md` para una descripción detallada de cada agente y de la arqu
 3. Copiar `\.env.example` a `\.env` y completar las credenciales de Kaggle.
 4. Levantar los servicios locales con `docker compose up -d`.
 5. Ejecutar secuencialmente:
+
+
    `python src/agents/fetch.py`,
    `python src/agents/prep.py`,
    `python src/agents/split.py`,
@@ -136,4 +138,5 @@ Consulte `AGENTS.md` para una descripción detallada de cada agente y de la arqu
    `python src/agents/register.py`.
 6. Acceder a la interfaz de MLflow en `http://localhost:5000` y a la API de predicción en `http://localhost:8000/predict`.
 7. Para verificar el código ejecutar `pytest`.
+
 

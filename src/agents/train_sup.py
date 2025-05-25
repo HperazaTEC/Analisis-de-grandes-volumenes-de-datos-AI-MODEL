@@ -4,8 +4,8 @@ from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler
 from pyspark.ml import Pipeline
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
 from pyspark.sql import functions as F
-from utils.spark import get_spark
-from utils.balancing import add_weight_column
+from src.utils.spark import get_spark
+from src.utils.balancing import add_weight_column
 import mlflow
 from pathlib import Path
 from dotenv import load_dotenv
@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 def main() -> None:
     load_dotenv()
 
-    mlflow.spark.autolog(log_models=True)
+    mlflow.spark.autolog()
     spark = get_spark("train_sup")
     train = spark.read.parquet("data/processed/train.parquet")
     test = spark.read.parquet("data/processed/test.parquet")
@@ -34,7 +34,7 @@ def main() -> None:
     models = {
         "RandomForest": RandomForestClassifier(labelCol=target, featuresCol="features", weightCol="weight"),
         "GBT": GBTClassifier(labelCol=target, featuresCol="features", weightCol="weight"),
-        "MLP": MultilayerPerceptronClassifier(labelCol=target, featuresCol="features", weightCol="weight",
+        "MLP": MultilayerPerceptronClassifier(labelCol=target, featuresCol="features",
                                                layers=[len(num_cols) + len(cat_cols), 10, 2])
     }
 
