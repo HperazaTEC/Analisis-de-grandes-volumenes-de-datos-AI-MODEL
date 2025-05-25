@@ -4,8 +4,8 @@ from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler
 from pyspark.ml import Pipeline
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
 from pyspark.sql import functions as F
-from utils.spark import get_spark
-from utils.balancing import add_weight_column
+from src.utils.spark import get_spark
+from src.utils.balancing import add_weight_column
 import mlflow
 from pathlib import Path
 from dotenv import load_dotenv

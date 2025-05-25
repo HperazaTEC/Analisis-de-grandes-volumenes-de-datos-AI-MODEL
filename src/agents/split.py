@@ -2,7 +2,7 @@
 from pyspark.sql import functions as F
 from pyspark.sql import DataFrame
 from functools import reduce
-from utils.spark import get_spark
+from src.utils.spark import get_spark
 from pathlib import Path
 
 
