@@ -2,11 +2,13 @@
 .PHONY: up pipeline
 
 up:
-	docker compose -f docker/docker-compose.yml up --build -d
+        docker compose -f docker/docker-compose.yml up --build -d
 
-	pipeline:
-	docker compose -f docker/docker-compose.yml exec credit-risk-app \
-               bash -c "python -m src.agents.fetch && \
+
+pipeline:
+        docker compose -f docker/docker-compose.yml exec credit-risk-app \
+                bash -c "python -m src.agents.fetch && \
+
                         python -m src.agents.prep && \
                         python -m src.agents.split && \
                         python -m src.agents.train_sup && \
