@@ -1,0 +1,15 @@
+# Ignore data artifacts and experiment logs
+/data
+/mlruns
+/models
+/metrics
+.notebooks
+
+.git
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# DVC artifacts
+.dvc

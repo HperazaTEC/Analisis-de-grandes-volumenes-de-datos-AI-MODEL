@@ -24,6 +24,8 @@ services:
     build:
       context: ..                      # sigue usando la raíz
       dockerfile: docker/Dockerfile    # aquí le dices dónde está
+    env_file:
+      - ../.env
     depends_on:
       - spark-master
       - mlflow
