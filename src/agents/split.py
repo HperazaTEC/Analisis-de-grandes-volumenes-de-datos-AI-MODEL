@@ -27,8 +27,20 @@ def main() -> None:
     df = spark.read.parquet("data/processed/M.parquet")
     train, test = stratified_split(df, ["grade", "loan_status"], test_frac=0.2, seed=42)
     Path("data/processed").mkdir(parents=True, exist_ok=True)
-    train.write.mode("overwrite").parquet("data/processed/train.parquet")
-    test.write.mode("overwrite").parquet("data/processed/test.parquet")
+    (
+        train.coalesce(8)
+        .write
+        .option("maxRecordsPerFile", 250000)
+        .mode("overwrite")
+        .parquet("data/processed/train.parquet")
+    )
+    (
+        test.coalesce(8)
+        .write
+        .option("maxRecordsPerFile", 250000)
+        .mode("overwrite")
+        .parquet("data/processed/test.parquet")
+    )
 
 
 if __name__ == "__main__":
