@@ -9,8 +9,21 @@ from src.utils.spark import get_spark
 from src.agents.split import stratified_split
 
 
-def test_stratified_split_counts():
+import pytest
+
+
+@pytest.fixture(scope="session")
+def spark_session():
     spark = get_spark("test-split")
+    yield spark
+    try:
+        spark.stop()
+    except Exception:
+        pass
+
+
+def test_stratified_split_counts(spark_session):
+    spark = spark_session
     rows = []
     for i in range(10):
         rows.append(("A", "Good", i))

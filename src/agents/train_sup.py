@@ -14,7 +14,10 @@ from dotenv import load_dotenv
 def main() -> None:
     load_dotenv()
 
-    mlflow.spark.autolog()
+    try:
+        mlflow.spark.autolog()
+    except Exception as e:
+        print(f"MLflow autologging not available: {e}")
     spark = get_spark("train_sup")
     train = spark.read.parquet("data/processed/train.parquet")
     test = spark.read.parquet("data/processed/test.parquet")

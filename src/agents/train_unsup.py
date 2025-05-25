@@ -11,7 +11,10 @@ from dotenv import load_dotenv
 def main() -> None:
     load_dotenv()
 
-    mlflow.spark.autolog()
+    try:
+        mlflow.spark.autolog()
+    except Exception as e:
+        print(f"MLflow autologging not available: {e}")
     spark = get_spark("train_unsup")
     train = spark.read.parquet("data/processed/train.parquet")
     feature_cols = [c for c in train.columns if c not in {"default_flag", "weight"}]

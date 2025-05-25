@@ -139,4 +139,16 @@ Consulte `AGENTS.md` para una descripción detallada de cada agente y de la arqu
 6. Acceder a la interfaz de MLflow en `http://localhost:5000` y a la API de predicción en `http://localhost:8000/predict`.
 7. Para verificar el código ejecutar `pytest`.
 
+## Entrega Actividad 3
+
+El proyecto cumple con los requisitos de la actividad de aprendizaje supervisado y no supervisado. A continuación se resumen los pasos implementados:
+
+1. **Introducción teórica** – En `AGENTS.md` se describen brevemente los conceptos de aprendizaje supervisado y no supervisado, así como los algoritmos más representativos disponibles en PySpark.
+2. **Selección de los datos** – El agente `prep.py` carga el dataset de LendingClub y genera la muestra `sample_M.parquet`, estratificando por `grade` y `loan_status`.
+3. **Preparación de los datos** – Se corrigen nulos, se convierten tipos y se aplican transformaciones como winsorización. El resultado final se almacena en `M.parquet`.
+4. **Conjunto de entrenamiento y prueba** – Con `split.py` se crea una partición 80/20 estratificada para evitar sesgos. Los archivos se guardan como `train.parquet` y `test.parquet`.
+5. **Modelado supervisado y no supervisado** – `train_sup.py` entrena RandomForest, GBT y MLP sobre la etiqueta `default_flag`; `train_unsup.py` aplica K-Means y GMM para segmentar perfiles. Todas las ejecuciones se registran en MLflow.
+
+Para evitar errores de memoria durante el entrenamiento se configuró Spark con 4&nbsp;GB para el driver y el ejecutor y se redujo el número de particiones de *shuffle*. Además se deshabilitó `PYSPARK_PIN_THREAD` para que MLflow pueda activar el autolog.
+
 
