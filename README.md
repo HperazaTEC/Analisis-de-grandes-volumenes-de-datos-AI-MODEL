@@ -2,6 +2,7 @@
 
 Este proyecto implementa un pipeline completo de **MLOps** para predecir el incumplimiento de préstamos de *LendingClub* y segmentar a los solicitantes en grupos de riesgo. El flujo se ejecuta con **PySpark** para el procesamiento distribuido, **MLflow** para el seguimiento de experimentos y **DVC** para el versionado de datos y modelos.
 
+
 ## Objetivo del proyecto
 
 - Construir un sistema reproducible que descargue los datos históricos de LendingClub (2007‑2020 Q3).
@@ -25,7 +26,9 @@ El archivo `dvc.yaml` orquesta estos pasos en la secuencia:
 ## Guía rápida
 
 ```bash
+
 # 1. Crear un entorno virtual e instalar dependencias
+
 $ python -m venv .venv
 $ source .venv/bin/activate
 $ pip install -r requirements.txt
@@ -64,6 +67,6 @@ La API FastAPI quedará disponible en `http://localhost:8000/predict`.
 │   └── docker-compose.yml
 ├── dvc.yaml
 └── AGENTS.md
-```
+
 
 Consulte `AGENTS.md` para una descripción detallada de cada agente y de la arquitectura general.
