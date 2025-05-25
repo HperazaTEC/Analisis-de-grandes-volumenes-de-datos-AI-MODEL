@@ -16,6 +16,8 @@ import sys
 import re
 
 
+
+
 def main() -> int:
     load_dotenv()
 
@@ -34,6 +36,21 @@ def main() -> int:
     mem_str = os.environ.get("SPARK_DRIVER_MEMORY", "6")
     digits = re.findall(r"\d+(?:\.\d+)?", mem_str)
     driver_mem_gb = float(digits[0]) if digits else 6.0
+    max_rows = int(2_000_000 * (driver_mem_gb / 6))
+    total_rows = train.count()
+    if total_rows > max_rows:
+        fraction = max_rows / total_rows
+        train = train.sample(fraction=fraction, seed=42)
+        print(
+            f"Downsampled train from {total_rows} to {max_rows} rows (driver_mem={driver_mem_gb}G)"
+        )
+
+    # Auto-detect available driver memory (GB) and compute batch factor
+    mem_str = os.environ.get("SPARK_DRIVER_MEMORY", "6")
+    try:
+        driver_mem_gb = float("".join(ch for ch in mem_str if ch.isdigit() or ch == "."))
+    except ValueError:
+        driver_mem_gb = 6.0
     max_rows = int(2_000_000 * (driver_mem_gb / 6))
     total_rows = train.count()
     if total_rows > max_rows:
@@ -81,6 +98,7 @@ def main() -> int:
                     else:
                         logging.critical(f"Training failed: {e}")
                         sys.exit(1)
+
             auc = evaluator.evaluate(preds)
             mlflow.log_metric("auc", auc)
             mlflow.spark.log_model(model, f"models/supervised/{name}", registered_model_name="credit-risk")
