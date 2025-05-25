@@ -93,6 +93,35 @@ Al finalizar, la interfaz de MLflow estará disponible en `http://localhost:5000
 
 Consulte `AGENTS.md` para una descripción detallada de cada agente y de la arquitectura general.
 
+## Entrega Actividad 3
+
+La actividad consistió en aplicar algoritmos de aprendizaje supervisado y no supervisado sobre una muestra de LendingClub utilizando PySpark.
+
+### 1. Introducción teórica
+
+El aprendizaje **supervisado** se enfoca en predecir una variable objetivo a partir de datos etiquetados. En PySpark se emplearon `RandomForestClassifier`, `GBTClassifier` y `MultilayerPerceptronClassifier`.
+
+El aprendizaje **no supervisado** agrupa registros sin etiquetas. Se utilizaron `KMeans` y `GaussianMixture` como algoritmos principales.
+
+### 2. Selección de los datos
+
+Se construyó una muestra estratificada (archivo `data/processed/sample_M.parquet`) tomando un subconjunto balanceado de cada estrato `grade × loan_status`.
+
+### 3. Preparación de los datos
+
+El agente `prep.py` limpia valores nulos, aplica *winsorización*, transforma tipos y añade la bandera `default_flag`. El resultado es `M.parquet`.
+
+### 4. Preparación del conjunto de entrenamiento y prueba
+
+`split.py` genera `train.parquet` y `test.parquet` con una división 80/20 estratificada. Se ajustaron los parámetros de memoria en `get_spark()` para evitar `OutOfMemoryError` durante el particionado.
+
+### 5. Modelos de aprendizaje
+
+- Supervisado: se entrenaron RandomForest, GBT y MLP sobre el campo `default_flag`.
+- No supervisado: se ejecutaron K-Means y GaussianMixture para clústeres de riesgo.
+
+Todos los experimentos se registran en MLflow para su análisis y despliegue.
+
 ## Descripción de scripts y funciones
 
 - **`src/agents/fetch.py`**
@@ -141,6 +170,7 @@ Consulte `AGENTS.md` para una descripción detallada de cada agente y de la arqu
 
 ## Entrega Actividad 3
 
+
 Este repositorio cumple con los requisitos de la actividad de Aprendizaje Supervisado y No Supervisado. A continuación se resume el flujo seguido:
 
 1. **Introducción teórica**: en `AGENTS.md` se describen brevemente los conceptos de aprendizaje supervisado y no supervisado así como los algoritmos más usados en PySpark.
@@ -150,5 +180,6 @@ Este repositorio cumple con los requisitos de la actividad de Aprendizaje Superv
 5. **Modelos**: `train_sup.py` entrena RandomForest, GBT y MLP sobre `default_flag` y `train_unsup.py` aplica K‑Means y GaussianMixture. Todas las ejecuciones se registran en MLflow.
 
 Para evitar errores `OutOfMemoryError: Java heap space`, la sesión de Spark se crea con mayor memoria (8 GB para driver y ejecutores) y el servicio Docker `credit-risk-app` expone variables de entorno `_JAVA_OPTIONS`, `SPARK_DRIVER_MEMORY`, `SPARK_EXECUTOR_MEMORY` y `SPARK_DRIVER_MAXRESULTSIZE`.
+
 
 
