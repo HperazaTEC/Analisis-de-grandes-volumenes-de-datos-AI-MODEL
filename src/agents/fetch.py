@@ -1,16 +1,27 @@
 
-"""Download raw LendingClub data from Kaggle."""
+"""Download raw LendingClub data from Kaggle with basic validation."""
+
 from pathlib import Path
 import os
+import zipfile
+
 from dotenv import load_dotenv
 from kaggle import api
-import zipfile
 
 
 def main() -> None:
     load_dotenv()
+
     dataset = os.environ.get("KAGGLE_DATASET")
+    username = os.environ.get("KAGGLE_USERNAME")
+    key = os.environ.get("KAGGLE_KEY")
     file_name = os.environ.get("KAGGLE_FILE", "Loan_status_2007-2020Q3.gzip")
+
+    if not dataset or not username or not key:
+        raise EnvironmentError(
+            "Kaggle credentials or dataset not configured.\n"
+            "Please set KAGGLE_USERNAME, KAGGLE_KEY and KAGGLE_DATASET in the .env file."
+        )
     raw_dir = Path("data/raw")
     raw_dir.mkdir(parents=True, exist_ok=True)
     out_path = raw_dir / file_name
