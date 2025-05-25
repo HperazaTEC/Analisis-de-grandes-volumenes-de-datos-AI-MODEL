@@ -67,6 +67,7 @@ def main() -> None:
         .parquet(str(proc_dir / "M.parquet"))
     )
 
+
     # 10 % stratified sample for exploratory analysis
     strata = [r[0] for r in df.select("grade_status").distinct().collect()]
     fractions = {s: 0.10 for s in strata}
