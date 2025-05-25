@@ -5,6 +5,7 @@ up:
 	docker compose -f docker/docker-compose.yml up --build -d
 
 pipeline:
+
 	docker compose -f docker/docker-compose.yml exec credit-risk-app \
 	bash -c "python -m src.agents.fetch && \
 	python -m src.agents.prep && \
@@ -13,4 +14,3 @@ pipeline:
 	python -m src.agents.train_unsup && \
 	python -m src.agents.evaluate && \
 	python -m src.agents.register"
-# ─────────────────────────────────────────
