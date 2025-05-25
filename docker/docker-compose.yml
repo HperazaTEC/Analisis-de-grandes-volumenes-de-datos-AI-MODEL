@@ -21,7 +21,9 @@ services:
       - "9000:9000"
       - "9001:9001"
   credit-risk-app:
-    build: ../
+    build:
+      context: ..                      # sigue usando la raíz
+      dockerfile: docker/Dockerfile    # aquí le dices dónde está
     depends_on:
       - spark-master
       - mlflow
