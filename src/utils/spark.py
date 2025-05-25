@@ -8,6 +8,12 @@ def get_spark(app_name: str = "credit-risk") -> SparkSession:
         .appName(app_name)
         .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         .config("spark.kryoserializer.buffer.max", "512m")
+        # Limit shuffle partitions to keep memory usage low and avoid OOM
+        .config("spark.sql.shuffle.partitions", "4")
+        # Allocate more driver/executor memory to handle moderate datasets
+        .config("spark.driver.memory", "2g")
+        .config("spark.executor.memory", "2g")
+        .config("spark.driver.maxResultSize", "1g")
 
         .getOrCreate()
     )
