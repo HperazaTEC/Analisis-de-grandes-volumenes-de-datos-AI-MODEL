@@ -170,22 +170,14 @@ Todos los experimentos se registran en MLflow para su análisis y despliegue.
 
 ## Entrega Actividad 3
 
-Este repositorio contiene la solución solicitada en la Actividad 3 del módulo.
-Las etapas implementadas son:
+El proyecto cumple con los requisitos de la actividad de aprendizaje supervisado y no supervisado. A continuación se resumen los pasos implementados:
 
-1. **Introducción teórica**: se resumen los conceptos de aprendizaje
-   supervisado y no supervisado junto con ejemplos de algoritmos en PySpark.
-2. **Selección de los datos**: `src/agents/prep.py` construye una muestra
-   estratificada desde el dataset de LendingClub y genera `sample_M.parquet`.
-3. **Preparación de los datos**: se limpian nulos, se aplica winsorización y se
-   agregan columnas derivadas; el resultado se guarda en `M.parquet`.
-4. **Conjunto de entrenamiento y prueba**: `src/agents/split.py` produce una
-   división 80/20 estratificada por grado y estado del préstamo.
-5. **Modelos supervisado y no supervisado**: `train_sup.py` entrena
-   RandomForest, GBT y una red MLP, mientras que `train_unsup.py` ejecuta
-   K‑Means y GaussianMixture. Todos los experimentos se registran en MLflow.
+1. **Introducción teórica** – En `AGENTS.md` se describen brevemente los conceptos de aprendizaje supervisado y no supervisado, así como los algoritmos más representativos disponibles en PySpark.
+2. **Selección de los datos** – El agente `prep.py` carga el dataset de LendingClub y genera la muestra `sample_M.parquet`, estratificando por `grade` y `loan_status`.
+3. **Preparación de los datos** – Se corrigen nulos, se convierten tipos y se aplican transformaciones como winsorización. El resultado final se almacena en `M.parquet`.
+4. **Conjunto de entrenamiento y prueba** – Con `split.py` se crea una partición 80/20 estratificada para evitar sesgos. Los archivos se guardan como `train.parquet` y `test.parquet`.
+5. **Modelado supervisado y no supervisado** – `train_sup.py` entrena RandomForest, GBT y MLP sobre la etiqueta `default_flag`; `train_unsup.py` aplica K-Means y GMM para segmentar perfiles. Todas las ejecuciones se registran en MLflow.
 
-La configuración de Spark se ajustó para prevenir errores de memoria y se
-deshabilitó la advertencia de autologging mediante `PYSPARK_PIN_THREAD=false`.
+Para evitar errores de memoria durante el entrenamiento se configuró Spark con 4&nbsp;GB para el driver y el ejecutor y se redujo el número de particiones de *shuffle*. Además se deshabilitó `PYSPARK_PIN_THREAD` para que MLflow pueda activar el autolog.
 
 
