@@ -6,11 +6,10 @@ up:
 
 pipeline:
         docker compose -f docker/docker-compose.yml exec credit-risk-app \
-                bash -c "python -m src.agents.fetch && \
-                        python -m src.agents.prep && \
-                        python -m src.agents.split && \
-                        python -m src.agents.train_sup && \
-                        python -m src.agents.train_unsup && \
-                        python -m src.agents.evaluate && \
-                        python -m src.agents.register"
-# ─────────────────────────────────────────
+                bash -c "python src/agents/fetch.py && \
+                         python src/agents/prep.py && \
+                         python src/agents/split.py && \
+                         python src/agents/train_sup.py && \
+                         python src/agents/train_unsup.py && \
+                         python src/agents/evaluate.py && \
+                         python src/agents/register.py"
