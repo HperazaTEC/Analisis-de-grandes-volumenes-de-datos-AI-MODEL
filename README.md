@@ -124,8 +124,8 @@ Consulte `AGENTS.md` para una descripción detallada de cada agente y de la arqu
 
 1. Clonar este repositorio y crear un entorno virtual de Python.
 2. Instalar las dependencias con `pip install -r requirements.txt`.
-3. La imagen Docker ya incluye Java y define `JAVA_HOME` para Spark.
-4. Copiar `\.env.example` a `\.env` y completar las credenciales de Kaggle.
+3. Copiar `\.env.example` a `\.env` y completar las credenciales de Kaggle.
+4. La imagen Docker ya trae Java preinstalado para ejecutar PySpark.
 5. Levantar los servicios locales con `docker compose up -d`.
 6. Ejecutar secuencialmente:
 
@@ -139,5 +139,7 @@ Consulte `AGENTS.md` para una descripción detallada de cada agente y de la arqu
 
 7. Acceder a la interfaz de MLflow en `http://localhost:5000` y a la API de predicción en `http://localhost:8000/predict`.
 8. Para verificar el código ejecutar `pytest`.
+
+
 
 
