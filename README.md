@@ -126,6 +126,7 @@ Consulte `AGENTS.md` para una descripción detallada de cada agente y de la arqu
 2. Instalar las dependencias con `pip install -r requirements.txt`.
 3. Copiar `\.env.example` a `\.env` y completar las credenciales de Kaggle.
 4. Levantar los servicios locales con `docker compose up -d`.
+   La imagen Docker instala Java 11, requisito de PySpark, y exporta `JAVA_HOME`.
 5. Ejecutar secuencialmente:
    `python -m src.agents.fetch`,
    `python -m src.agents.prep`,
