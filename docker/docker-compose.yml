@@ -16,8 +16,18 @@ services:
       dockerfile: docker/Dockerfile    # aquí le dices dónde está
     env_file:
       - ../.env
+    environment:
+      - _JAVA_OPTIONS=-Xms6g -Xmx10g
+      - SPARK_DRIVER_MEMORY=8g
+      - SPARK_EXECUTOR_MEMORY=8g
+      - SPARK_DRIVER_MAXRESULTSIZE=3g
+      - PYTHONPATH=/app
     depends_on:
       - spark-master
       - mlflow
     ports:
       - "8000:8000"
+    deploy:
+      resources:
+        limits:
+          memory: 12g

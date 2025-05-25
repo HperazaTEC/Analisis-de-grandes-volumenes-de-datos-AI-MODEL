@@ -139,4 +139,16 @@ Consulte `AGENTS.md` para una descripción detallada de cada agente y de la arqu
 6. Acceder a la interfaz de MLflow en `http://localhost:5000` y a la API de predicción en `http://localhost:8000/predict`.
 7. Para verificar el código ejecutar `pytest`.
 
+## Entrega Actividad 3
+
+Este repositorio cumple con los requisitos de la actividad de Aprendizaje Supervisado y No Supervisado. A continuación se resume el flujo seguido:
+
+1. **Introducción teórica**: en `AGENTS.md` se describen brevemente los conceptos de aprendizaje supervisado y no supervisado así como los algoritmos más usados en PySpark.
+2. **Selección de los datos**: el agente `prep.py` carga el CSV original de LendingClub, elimina la columna fantasma `_c0` y genera una muestra estratificada `sample_M.parquet`.
+3. **Preparación de los datos**: en el mismo agente se corrigen nulos, se aplican transformaciones de tipos y *winsorización* para valores atípicos, dejando `M.parquet` listo para modelar.
+4. **Conjunto de entrenamiento y prueba**: `split.py` divide la muestra en 80 % entrenamiento y 20 % prueba manteniendo la estratificación por `grade` y `loan_status`.
+5. **Modelos**: `train_sup.py` entrena RandomForest, GBT y MLP sobre `default_flag` y `train_unsup.py` aplica K‑Means y GaussianMixture. Todas las ejecuciones se registran en MLflow.
+
+Para evitar errores `OutOfMemoryError: Java heap space`, la sesión de Spark se crea con mayor memoria (8 GB para driver y ejecutores) y el servicio Docker `credit-risk-app` expone variables de entorno `_JAVA_OPTIONS`, `SPARK_DRIVER_MEMORY`, `SPARK_EXECUTOR_MEMORY` y `SPARK_DRIVER_MAXRESULTSIZE`.
+
 
