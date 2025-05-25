@@ -58,7 +58,8 @@ def main() -> None:
     )
     df = winsorize(df, numerical_vars)
 
-    df.write.mode("overwrite").parquet(str(proc_dir / "M.parquet"))
+    # Reduce the number of concurrent writers to avoid OOM errors
+    df.repartition(8).write.mode("overwrite").parquet(str(proc_dir / "M.parquet"))
 
     # 10 % stratified sample for exploratory analysis
     strata = [r[0] for r in df.select("grade_status").distinct().collect()]
