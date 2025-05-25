@@ -1,6 +1,8 @@
 # Analisis de Grandes Volúmenes de Datos - Modelo de Riesgo Crediticio
 
+
 Este repositorio contiene el código fuente del proyecto de riesgo crediticio con datos de LendingClub descrito en `AGENTS.md`. El objetivo es construir un pipeline MLOps completo que procese millones de registros en PySpark, entrene modelos supervisados y no supervisados y registre todos los experimentos en MLflow.
+
 
 ## Descripción del dataset
 
@@ -43,32 +45,6 @@ Este repositorio contiene el código fuente del proyecto de riesgo crediticio co
 8. **Despliegue**: la API FastAPI contenida en `docker/` se expone en `http://localhost:8000/predict`.
 9. **Monitorización**: Prometheus y Grafana para métricas de servicio; EvidentlyAI para *data drift*.
 
-## Uso rápido
-
-```bash
-# 1. Crear entorno virtual e instalar dependencias
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-# 2. Configurar credenciales de Kaggle
-cp .env.example .env  # editar con tu API key y dataset
-
-# 3. (Opcional) obtener datos cacheados y levantar los servicios
-#    Esto inicia Spark, MLflow y MinIO en contenedores Docker
-#    y deja MLflow escuchando en http://localhost:5000
-
-dvc pull
-docker compose -f docker/docker-compose.yml up -d
-
-# 4. Ejecutar el pipeline completo
-#    Descarga la data (si no existe), prepara, divide y entrena modelos
-
-dvc repro
-
-# 5. Correr las pruebas unitarias
-pytest -q
-```
 
 Este proyecto implementa un pipeline completo de **MLOps** para predecir el incumplimiento de préstamos de *LendingClub* y segmentar a los solicitantes en grupos de riesgo. El flujo se ejecuta con **PySpark** para el procesamiento distribuido, **MLflow** para el seguimiento de experimentos y **DVC** para el versionado de datos y modelos.
 
