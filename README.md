@@ -94,3 +94,41 @@ Al finalizar, la interfaz de MLflow estará disponible en `http://localhost:5000
 
 Consulte `AGENTS.md` para una descripción detallada de cada agente y de la arquitectura general.
 
+## Descripción de scripts y funciones
+
+- **`src/agents/fetch.py`**
+  - `main()` descarga el dataset desde Kaggle utilizando las variables definidas en `.env` y lo guarda en `data/raw/`.
+- **`src/agents/prep.py`**
+  - `winsorize(df, cols, lower, upper)` recorta los extremos de columnas numéricas.
+  - `main()` limpia nulos, castea tipos, crea `default_flag` y genera `M.parquet` junto con `sample_M.parquet`.
+- **`src/agents/split.py`**
+  - `stratified_split(df, strat_cols, test_frac, seed)` produce divisiones de entrenamiento y prueba estratificadas.
+  - `main()` escribe `train.parquet` y `test.parquet` en `data/processed/`.
+- **`src/agents/train_sup.py`**
+  - `main()` entrena modelos supervisados (RandomForest, GBT y MLP) aplicando pesos de clase y registra los experimentos en MLflow.
+- **`src/agents/train_unsup.py`**
+  - `main()` ajusta algoritmos de clústeres (KMeans y GaussianMixture) y guarda los modelos resultantes.
+- **`src/agents/evaluate.py`**
+  - `main()` carga el mejor modelo supervisado y calcula el AUC sobre el conjunto de prueba.
+- **`src/agents/register.py`**
+  - `main()` registra en el *Model Registry* la ejecución con mayor métrica obtenida.
+- **`src/api.py`**
+  - `load_model()` se ejecuta al iniciar la API y recupera el modelo en producción desde MLflow.
+  - `predict()` expone el endpoint `/predict` para generar inferencias.
+- **`src/utils/balancing.py`**
+  - `compute_class_weights()` calcula los pesos para balancear la clase binaria.
+  - `add_weight_column()` agrega al `DataFrame` una columna de pesos.
+- **`src/utils/spark.py`**
+  - `get_spark()` crea la sesión de Spark reutilizada por todos los agentes.
+
+## Guía rápida de uso
+
+1. Clonar este repositorio y crear un entorno virtual de Python.
+2. Instalar las dependencias con `pip install -r requirements.txt`.
+3. Copiar `\.env.example` a `\.env` y completar las credenciales de Kaggle y del remoto S3/MinIO.
+4. Ejecutar `dvc pull` para obtener los artefactos versionados (opcional si se tiene acceso al remoto).
+5. Levantar los servicios locales con `docker compose up -d`.
+6. Reproducir toda la tubería con `dvc repro`.
+7. Acceder a la interfaz de MLflow en `http://localhost:5000` y a la API de predicción en `http://localhost:8000/predict`.
+8. Para verificar el código ejecutar `pytest`.
+
