@@ -93,30 +93,6 @@ Este proyecto implementa un pipeline completo de **MLOps** para predecir el incu
 El archivo `dvc.yaml` orquesta estos pasos en la secuencia:
 `fetch → prep → split → train_sup → train_unsup → evaluate → register`.
 
-## Guía rápida
-
-```bash
-
-# 1. Crear un entorno virtual e instalar dependencias
-
-$ python -m venv .venv
-$ source .venv/bin/activate
-$ pip install -r requirements.txt
-
-# 2. Configurar las credenciales de Kaggle
-$ cp .env.example .env  # edite este archivo con su API key y dataset
-
-# 3. (Opcional) descargar los datos almacenados y arrancar los servicios locales
-$ dvc pull
-$ docker compose -f docker/docker-compose.yml up -d
-
-# 4. Ejecutar el pipeline completo
-$ dvc repro
-
-# 5. Lanzar las pruebas unitarias
-$ pytest -q
-```
-
 
 Al finalizar, la interfaz de MLflow estará disponible en `http://localhost:5000` y la API de predicción en `http://localhost:8000/predict`.
 
