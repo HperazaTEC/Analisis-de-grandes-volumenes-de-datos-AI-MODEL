@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Crear un sistema de *machine learning* de punta a punta que prediga la probabilidad de incumplimiento y segmente perfiles de prestatarios usando los datos históricos de Lending Club (2007-2020 Q3). El proyecto utiliza **PySpark** para procesamiento distribuido, **MLflow** para trazabilidad de experimentos y **DVC** para control de versiones de datos/modelos, todo dentro de una arquitectura **dockerizada** basada en principios de **MLOps**. (BALANCEA LAS CLASES)
+Crear un sistema de *machine learning* de punta a punta que prediga la probabilidad de incumplimiento y segmente perfiles de prestatarios usando los datos históricos de Lending Club (2007-2020 Q3). El proyecto utiliza **PySpark** para procesamiento distribuido y **MLflow** para trazabilidad de experimentos, todo dentro de una arquitectura **dockerizada** basada en principios de **MLOps**. (BALANCEA LAS CLASES)
 
 > El conjunto original contiene **≈ 2.9 M** registros y **142** variables, con \~26 % de valores nulos y outliers relevantes. fileciteturn0file0
 
@@ -16,8 +16,8 @@ Crear un sistema de *machine learning* de punta a punta que prediga la probabili
 ## Arquitectura general
 
 ```
-DVC → DataOps ─┐
-               ├──► PySpark ETL → Feature Store → MLflow Tracking ▲
+DataOps ─┐
+          ├──► PySpark ETL → Feature Store → MLflow Tracking ▲
 GitHub Actions ─┘                                │
                                              Docker Registry
                                                   │
@@ -26,8 +26,8 @@ GitHub Actions ─┘                                │
 
 ### Descripción de agentes
 
-1. **Data-Versioning Agent (`dvc.yaml` – stage `fetch`)**
-   Descarga datos brutos y los almacena en un remoto S3/MinIO.
+1. **Data-Fetch Agent (`src/agents/fetch.py`)**
+   Descarga datos brutos desde Kaggle y los guarda localmente en `data/raw/`.
 2. **Data-Preparation Agent (`src/agents/prep.py`)**
    • Limpieza de nulos, winsorización de outliers y *type casting*.
    • Genera `data/processed/M.parquet`.
@@ -39,10 +39,10 @@ GitHub Actions ─┘                                │
    Ejecuta K-Means y GaussianMixture para clústeres de riesgo.
 6. **Experiment-Tracking Agent (MLflow)**
    Autolog de métricas, artefactos y parámetros; registra el mejor modelo en la *Model Registry*.
-7. **Pipeline-Orchestrator Agent (DVC)**
-   Define el DAG `fetch → prep → split → train_sup → train_unsup → evaluate → register`.
+7. **Pipeline-Orchestrator Agent (Makefile)**
+   Ejecuta en secuencia `fetch → prep → split → train_sup → train_unsup → evaluate → register`.
 8. **CI/CD Agent (GitHub Actions)**
-   Corre `dvc repro` en cada *push*, ejecuta pruebas unitarias y publica imágenes en Docker Hub.
+   Ejecuta el pipeline completo y las pruebas unitarias en cada *push*; publica imágenes en Docker Hub.
 9. **Deployment Agent (`docker/`)**
    Contiene `Dockerfile` y `docker-compose.yml`; expone un endpoint `/predict` vía FastAPI.
 
@@ -59,7 +59,6 @@ GitHub Actions ─┘                                │
 │   ├── pipelines/
 │   └── utils/
 ├── models/
-├── dvc.yaml
 ├── docker/
 │   ├── Dockerfile
 │   └── docker-compose.yml
@@ -89,24 +88,17 @@ services:
   mlflow:
     image: ghcr.io/mlflow/mlflow:latest
     ports: ["5000:5000"]
-  minio:
-    image: minio/minio
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: admin
-      MINIO_ROOT_PASSWORD: admin123
   credit-risk-app:
     build: ./docker
-    depends_on: [spark-master, mlflow, minio]
+    depends_on: [spark-master, mlflow]
     ports: ["8000:8000"]
 ```
 
 ## Pasos de reproducción
 
-1. `dvc pull`
-2. `docker compose up -d`
-3. `dvc repro`
-4. Visitar **MLflow UI → [http://localhost:5000](http://localhost:5000)**.
+1. `docker compose up -d`
+2. Ejecutar el pipeline con `make pipeline` o correr manualmente los agentes en el orden indicado.
+3. Visitar **MLflow UI → [http://localhost:5000](http://localhost:5000)**.
 
 ---
 
