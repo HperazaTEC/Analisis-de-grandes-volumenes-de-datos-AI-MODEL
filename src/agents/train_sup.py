@@ -16,6 +16,7 @@ import sys
 import re
 
 
+
 def main() -> int:
     load_dotenv()
 
@@ -25,9 +26,38 @@ def main() -> int:
         print(f"MLflow autologging not available: {e}")
 
     spark = get_spark("train_sup")
-    train = spark.read.parquet("data/processed/train.parquet")
-    test = spark.read.parquet("data/processed/test.parquet")
-    target = "default_flag"
+    try:
+        train = spark.read.parquet("data/processed/train.parquet")
+        test = spark.read.parquet("data/processed/test.parquet")
+        target = "default_flag"
+
+    # Auto-detect available driver memory (GB) and compute batch factor
+    mem_str = os.environ.get("SPARK_DRIVER_MEMORY", "6")
+    digits = re.findall(r"\d+(?:\.\d+)?", mem_str)
+    driver_mem_gb = float(digits[0]) if digits else 6.0
+    max_rows = int(2_000_000 * (driver_mem_gb / 6))
+    total_rows = train.count()
+    if total_rows > max_rows:
+        fraction = max_rows / total_rows
+        train = train.sample(fraction=fraction, seed=42)
+        print(
+            f"Downsampled train from {total_rows} to {max_rows} rows (driver_mem={driver_mem_gb}G)"
+        )
+
+    # Auto-detect available driver memory (GB) and compute batch factor
+    mem_str = os.environ.get("SPARK_DRIVER_MEMORY", "6")
+    try:
+        driver_mem_gb = float("".join(ch for ch in mem_str if ch.isdigit() or ch == "."))
+    except ValueError:
+        driver_mem_gb = 6.0
+    max_rows = int(2_000_000 * (driver_mem_gb / 6))
+    total_rows = train.count()
+    if total_rows > max_rows:
+        fraction = max_rows / total_rows
+        train = train.sample(fraction=fraction, seed=42)
+        print(
+            f"Downsampled train from {total_rows} to {max_rows} rows (driver_mem={driver_mem_gb}G)"
+        )
 
     # Auto-detect available driver memory (GB) and compute batch factor
     mem_str = os.environ.get("SPARK_DRIVER_MEMORY", "6")
@@ -93,6 +123,10 @@ def main() -> int:
         spark.stop()
 
     return 0
+
+        return 0
+    finally:
+        spark.stop()
 
 
 if __name__ == "__main__":
