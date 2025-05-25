@@ -168,4 +168,24 @@ Todos los experimentos se registran en MLflow para su análisis y despliegue.
 6. Acceder a la interfaz de MLflow en `http://localhost:5000` y a la API de predicción en `http://localhost:8000/predict`.
 7. Para verificar el código ejecutar `pytest`.
 
+## Entrega Actividad 3
+
+Este repositorio contiene la solución solicitada en la Actividad 3 del módulo.
+Las etapas implementadas son:
+
+1. **Introducción teórica**: se resumen los conceptos de aprendizaje
+   supervisado y no supervisado junto con ejemplos de algoritmos en PySpark.
+2. **Selección de los datos**: `src/agents/prep.py` construye una muestra
+   estratificada desde el dataset de LendingClub y genera `sample_M.parquet`.
+3. **Preparación de los datos**: se limpian nulos, se aplica winsorización y se
+   agregan columnas derivadas; el resultado se guarda en `M.parquet`.
+4. **Conjunto de entrenamiento y prueba**: `src/agents/split.py` produce una
+   división 80/20 estratificada por grado y estado del préstamo.
+5. **Modelos supervisado y no supervisado**: `train_sup.py` entrena
+   RandomForest, GBT y una red MLP, mientras que `train_unsup.py` ejecuta
+   K‑Means y GaussianMixture. Todos los experimentos se registran en MLflow.
+
+La configuración de Spark se ajustó para prevenir errores de memoria y se
+deshabilitó la advertencia de autologging mediante `PYSPARK_PIN_THREAD=false`.
+
 
