@@ -2,7 +2,7 @@
 from pyspark.ml.clustering import KMeans, GaussianMixture
 from pyspark.ml.feature import VectorAssembler, StandardScaler
 from pyspark.ml import Pipeline
-from utils.spark import get_spark
+from src.utils.spark import get_spark
 import mlflow
 from pathlib import Path
 from dotenv import load_dotenv

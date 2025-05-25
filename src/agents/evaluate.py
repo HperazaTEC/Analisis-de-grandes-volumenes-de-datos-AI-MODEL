@@ -4,7 +4,7 @@ import mlflow
 from dotenv import load_dotenv
 from mlflow.tracking import MlflowClient
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
-from utils.spark import get_spark
+from src.utils.spark import get_spark
 
 
 def main() -> None:

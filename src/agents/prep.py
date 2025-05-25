@@ -3,7 +3,7 @@
 
 from pyspark.sql import functions as F
 from pyspark.sql.types import DoubleType, IntegerType
-from utils.spark import get_spark
+from src.utils.spark import get_spark
 from pathlib import Path
 from dotenv import load_dotenv
 import os
