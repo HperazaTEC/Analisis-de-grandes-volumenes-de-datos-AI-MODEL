@@ -4,6 +4,7 @@ from pyspark.ml.feature import VectorAssembler, StandardScaler
 from pyspark.ml import Pipeline
 from src.utils.spark import get_spark
 import mlflow
+import os
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -15,6 +16,7 @@ def main() -> None:
         mlflow.spark.autolog()
     except Exception as e:
         print(f"MLflow autologging not available: {e}")
+
     spark = get_spark("train_unsup")
     train = spark.read.parquet("data/processed/train.parquet")
     feature_cols = [c for c in train.columns if c not in {"default_flag", "weight"}]
