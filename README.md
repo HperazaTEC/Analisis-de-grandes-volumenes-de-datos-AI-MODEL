@@ -35,18 +35,18 @@ Este repositorio contiene el código fuente del proyecto de riesgo crediticio co
 
 ## Pipeline MLOps propuesto
 
-1. **Ingesta y versionado**: descarga desde Kaggle mediante `src/agents/fetch.py` y guarda en `data/raw/`. El control de versiones se realiza con DVC.
+1. **Ingesta**: descarga desde Kaggle mediante `src/agents/fetch.py` y guarda en `data/raw/`.
 2. **Validación**: se definen esquemas con Great Expectations y la CI falla si el contrato se rompe.
 3. **Feature engineering**: imputaciones, codificación de variables categóricas y escalado de numéricas. Se generan atributos derivados como `loan_to_income` o `credit_age`.
 4. **Partición temporal**: se filtran préstamos previos a 2012 y se dividen en train (2007‑2017), validación (2018) y test (2019‑Q1 2020) para evitar fugas.
 5. **Manejo del desbalance**: estratificación y cálculo de pesos de clase (ver `src/utils/balancing.py`).
 6. **Entrenamiento**: modelos base de regresión logística y árboles (RandomForest, GBT), además de redes neuronales sencillas. Todo se registra con MLflow.
-7. **Registro y CI/CD**: el mejor modelo se registra en el MLflow Model Registry. GitHub Actions ejecuta las pruebas con PyTest y reproduce el pipeline con DVC.
+7. **Registro y CI/CD**: el mejor modelo se registra en el MLflow Model Registry. GitHub Actions ejecuta las pruebas con PyTest.
 8. **Despliegue**: la API FastAPI contenida en `docker/` se expone en `http://localhost:8000/predict`.
 9. **Monitorización**: Prometheus y Grafana para métricas de servicio; EvidentlyAI para *data drift*.
 
 
-Este proyecto implementa un pipeline completo de **MLOps** para predecir el incumplimiento de préstamos de *LendingClub* y segmentar a los solicitantes en grupos de riesgo. El flujo se ejecuta con **PySpark** para el procesamiento distribuido, **MLflow** para el seguimiento de experimentos y **DVC** para el versionado de datos y modelos.
+Este proyecto implementa un pipeline completo de **MLOps** para predecir el incumplimiento de préstamos de *LendingClub* y segmentar a los solicitantes en grupos de riesgo. El flujo se ejecuta con **PySpark** para el procesamiento distribuido y **MLflow** para el seguimiento de experimentos.
 
 
 ## Objetivo del proyecto
@@ -66,7 +66,7 @@ Este proyecto implementa un pipeline completo de **MLOps** para predecir el incu
 6. **evaluate** – Calcula métricas de desempeño y guarda los resultados en MLflow.
 7. **register** – Registra en el *Model Registry* el modelo con mejor desempeño para su despliegue.
 
-El archivo `dvc.yaml` orquesta estos pasos en la secuencia:
+Estos pasos deben ejecutarse en el siguiente orden:
 `fetch → prep → split → train_sup → train_unsup → evaluate → register`.
 
 
@@ -88,7 +88,6 @@ Al finalizar, la interfaz de MLflow estará disponible en `http://localhost:5000
 ├── docker/
 │   ├── Dockerfile
 │   └── docker-compose.yml
-├── dvc.yaml
 └── AGENTS.md
 ```
 
@@ -125,10 +124,16 @@ Consulte `AGENTS.md` para una descripción detallada de cada agente y de la arqu
 
 1. Clonar este repositorio y crear un entorno virtual de Python.
 2. Instalar las dependencias con `pip install -r requirements.txt`.
-3. Copiar `\.env.example` a `\.env` y completar las credenciales de Kaggle y del remoto S3/MinIO.
-4. Ejecutar `dvc pull` para obtener los artefactos versionados (opcional si se tiene acceso al remoto).
-5. Levantar los servicios locales con `docker compose up -d`.
-6. Reproducir toda la tubería con `dvc repro`.
-7. Acceder a la interfaz de MLflow en `http://localhost:5000` y a la API de predicción en `http://localhost:8000/predict`.
-8. Para verificar el código ejecutar `pytest`.
+3. Copiar `\.env.example` a `\.env` y completar las credenciales de Kaggle.
+4. Levantar los servicios locales con `docker compose up -d`.
+5. Ejecutar secuencialmente:
+   `python src/agents/fetch.py`,
+   `python src/agents/prep.py`,
+   `python src/agents/split.py`,
+   `python src/agents/train_sup.py`,
+   `python src/agents/train_unsup.py`,
+   `python src/agents/evaluate.py`,
+   `python src/agents/register.py`.
+6. Acceder a la interfaz de MLflow en `http://localhost:5000` y a la API de predicción en `http://localhost:8000/predict`.
+7. Para verificar el código ejecutar `pytest`.
 
