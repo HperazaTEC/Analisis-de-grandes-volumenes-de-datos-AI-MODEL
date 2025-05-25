@@ -33,6 +33,7 @@ def main() -> None:
              .option("compression", "gzip")
              .csv(src)
     )
+    df = df.drop("_c0")
 
     categorical_vars = [
         "term", "grade", "emp_length", "home_ownership",

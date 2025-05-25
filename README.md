@@ -170,14 +170,16 @@ Todos los experimentos se registran en MLflow para su análisis y despliegue.
 
 ## Entrega Actividad 3
 
-El proyecto cumple con los requisitos de la actividad de aprendizaje supervisado y no supervisado. A continuación se resumen los pasos implementados:
 
-1. **Introducción teórica** – En `AGENTS.md` se describen brevemente los conceptos de aprendizaje supervisado y no supervisado, así como los algoritmos más representativos disponibles en PySpark.
-2. **Selección de los datos** – El agente `prep.py` carga el dataset de LendingClub y genera la muestra `sample_M.parquet`, estratificando por `grade` y `loan_status`.
-3. **Preparación de los datos** – Se corrigen nulos, se convierten tipos y se aplican transformaciones como winsorización. El resultado final se almacena en `M.parquet`.
-4. **Conjunto de entrenamiento y prueba** – Con `split.py` se crea una partición 80/20 estratificada para evitar sesgos. Los archivos se guardan como `train.parquet` y `test.parquet`.
-5. **Modelado supervisado y no supervisado** – `train_sup.py` entrena RandomForest, GBT y MLP sobre la etiqueta `default_flag`; `train_unsup.py` aplica K-Means y GMM para segmentar perfiles. Todas las ejecuciones se registran en MLflow.
+Este repositorio cumple con los requisitos de la actividad de Aprendizaje Supervisado y No Supervisado. A continuación se resume el flujo seguido:
 
-Para evitar errores de memoria durante el entrenamiento se configuró Spark con 4&nbsp;GB para el driver y el ejecutor y se redujo el número de particiones de *shuffle*. Además se deshabilitó `PYSPARK_PIN_THREAD` para que MLflow pueda activar el autolog.
+1. **Introducción teórica**: en `AGENTS.md` se describen brevemente los conceptos de aprendizaje supervisado y no supervisado así como los algoritmos más usados en PySpark.
+2. **Selección de los datos**: el agente `prep.py` carga el CSV original de LendingClub, elimina la columna fantasma `_c0` y genera una muestra estratificada `sample_M.parquet`.
+3. **Preparación de los datos**: en el mismo agente se corrigen nulos, se aplican transformaciones de tipos y *winsorización* para valores atípicos, dejando `M.parquet` listo para modelar.
+4. **Conjunto de entrenamiento y prueba**: `split.py` divide la muestra en 80 % entrenamiento y 20 % prueba manteniendo la estratificación por `grade` y `loan_status`.
+5. **Modelos**: `train_sup.py` entrena RandomForest, GBT y MLP sobre `default_flag` y `train_unsup.py` aplica K‑Means y GaussianMixture. Todas las ejecuciones se registran en MLflow.
+
+Para evitar errores `OutOfMemoryError: Java heap space`, la sesión de Spark se crea con mayor memoria (8 GB para driver y ejecutores) y el servicio Docker `credit-risk-app` expone variables de entorno `_JAVA_OPTIONS`, `SPARK_DRIVER_MEMORY`, `SPARK_EXECUTOR_MEMORY` y `SPARK_DRIVER_MAXRESULTSIZE`.
+
 
 
