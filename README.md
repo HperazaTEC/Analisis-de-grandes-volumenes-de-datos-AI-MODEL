@@ -124,10 +124,11 @@ Consulte `AGENTS.md` para una descripción detallada de cada agente y de la arqu
 
 1. Clonar este repositorio y crear un entorno virtual de Python.
 2. Instalar las dependencias con `pip install -r requirements.txt`.
-3. Copiar `\.env.example` a `\.env` y completar las credenciales de Kaggle.
-4. Levantar los servicios locales con `docker compose up -d`.
-   La imagen Docker instala Java 11, requisito de PySpark, y exporta `JAVA_HOME`.
-5. Ejecutar secuencialmente:
+3. La imagen Docker ya incluye Java y define `JAVA_HOME` para Spark.
+4. Copiar `\.env.example` a `\.env` y completar las credenciales de Kaggle.
+5. Levantar los servicios locales con `docker compose up -d`.
+6. Ejecutar secuencialmente:
+
    `python -m src.agents.fetch`,
    `python -m src.agents.prep`,
    `python -m src.agents.split`,
@@ -135,6 +136,8 @@ Consulte `AGENTS.md` para una descripción detallada de cada agente y de la arqu
    `python -m src.agents.train_unsup`,
    `python -m src.agents.evaluate`,
    `python -m src.agents.register`.
-6. Acceder a la interfaz de MLflow en `http://localhost:5000` y a la API de predicción en `http://localhost:8000/predict`.
-7. Para verificar el código ejecutar `pytest`.
+
+7. Acceder a la interfaz de MLflow en `http://localhost:5000` y a la API de predicción en `http://localhost:8000/predict`.
+8. Para verificar el código ejecutar `pytest`.
+
 
