@@ -34,7 +34,7 @@ def main() -> None:
     models = {
         "RandomForest": RandomForestClassifier(labelCol=target, featuresCol="features", weightCol="weight"),
         "GBT": GBTClassifier(labelCol=target, featuresCol="features", weightCol="weight"),
-        "MLP": MultilayerPerceptronClassifier(labelCol=target, featuresCol="features", weightCol="weight",
+        "MLP": MultilayerPerceptronClassifier(labelCol=target, featuresCol="features",
                                                layers=[len(num_cols) + len(cat_cols), 10, 2])
     }
 
