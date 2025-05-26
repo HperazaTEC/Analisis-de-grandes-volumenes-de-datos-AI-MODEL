@@ -8,9 +8,10 @@ def get_spark(app_name: str = "credit-risk") -> SparkSession:
     os.environ.setdefault("PYSPARK_PIN_THREAD", "false")
     os.environ.setdefault("SPARK_LOCAL_IP", "127.0.0.1")
 
-    mem_str = os.environ.get("SPARK_DRIVER_MEMORY", "8g")
+    mem_str = os.environ.get("SPARK_DRIVER_MEMORY", "10g")
     digits = re.findall(r"\d+(?:\.\d+)?", mem_str)
-    driver_mem_gb = float(digits[0]) if digits else 8.0
+    driver_mem_gb = float(digits[0]) if digits else 10.0
+
 
     builder = (
         SparkSession.builder

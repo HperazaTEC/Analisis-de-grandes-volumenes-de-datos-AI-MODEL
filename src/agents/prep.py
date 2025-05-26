@@ -32,6 +32,19 @@ def _normalize(text: str) -> str:
     return text.lower()
 
 
+
+def top_k(df, col, k=100):
+    cats = (
+        df.groupBy(col)
+        .count()
+        .orderBy(F.desc("count"))
+        .limit(k)
+        .collect()
+    )
+    cats = [r[0] for r in cats]
+    return df.withColumn(col, F.when(F.col(col).isin(cats), F.col(col)).otherwise("other"))
+
+
 def main() -> None:
     load_dotenv()
     spark = get_spark("prep")
@@ -89,8 +102,10 @@ def main() -> None:
 
     norm_udf = F.udf(_normalize, StringType())
     df = df.withColumn("emp_title", norm_udf(F.col("emp_title")))
-    top_titles = [r[0] for r in df.groupBy("emp_title").count().orderBy(F.desc("count")).limit(500).collect()]
-    df = df.withColumn("emp_title", F.when(F.col("emp_title").isin(top_titles), F.col("emp_title")).otherwise("other"))
+
+    for c in cat_cols:
+        df = top_k(df, c, 100)
+
 
     train, test = stratified_split(df, ["grade", "loan_status"], test_frac=0.2, seed=42)
 
