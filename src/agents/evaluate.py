@@ -5,11 +5,15 @@ from dotenv import load_dotenv
 from mlflow.tracking import MlflowClient
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
 from src.utils.spark import get_spark
+from src.utils.metrics import dump_metrics
+import os
 
 
 def main() -> None:
 
     load_dotenv()
+
+    FAST = os.getenv("FAST_MODE", "false").lower() == "true"
 
     spark = get_spark("evaluate")
     test = spark.read.parquet("data/processed/test.parquet")
@@ -20,9 +24,7 @@ def main() -> None:
     preds = model.transform(test)
     evaluator = BinaryClassificationEvaluator(labelCol="default_flag")
     auc = evaluator.evaluate(preds)
-    Path("metrics").mkdir(parents=True, exist_ok=True)
-    with open("metrics/evaluation.json", "w") as f:
-        f.write('{"auc": %.4f}' % auc)
+    dump_metrics("evaluate", {"auc_test": auc, "fast": FAST})
     mlflow.log_metric("test_auc", auc)
 
 

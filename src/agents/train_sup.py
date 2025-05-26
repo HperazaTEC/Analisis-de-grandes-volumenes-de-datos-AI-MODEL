@@ -6,6 +6,7 @@ from pyspark.ml.evaluation import BinaryClassificationEvaluator
 from pyspark.sql import functions as F
 from src.utils.spark import get_spark
 from src.utils.balancing import add_weight_column
+from src.utils.metrics import dump_metrics
 import mlflow
 import os
 from pathlib import Path
@@ -25,6 +26,7 @@ def main() -> int:
     except Exception as e:
         print(f"MLflow autologging not available: {e}")
 
+    FAST = os.getenv("FAST_MODE", "false").lower() == "true"
     seed = 42
 
     spark = get_spark("train_sup")
@@ -97,6 +99,7 @@ def main() -> int:
 
                 preds = model.transform(test)
                 auc = evaluator.evaluate(preds)
+                dump_metrics(f"train_sup_{name}", {"auc": auc, "rows": subset.count(), "fast": FAST})
                 mlflow.log_metric("auc", auc)
                 mlflow.spark.log_model(model, f"models/supervised/{name}", registered_model_name="credit-risk")
 

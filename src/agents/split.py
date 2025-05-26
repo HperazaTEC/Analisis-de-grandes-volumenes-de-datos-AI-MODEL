@@ -4,6 +4,8 @@ from pyspark.sql import DataFrame
 from functools import reduce
 from src.utils.spark import get_spark
 from pathlib import Path
+from src.utils.metrics import dump_metrics
+import os
 
 
 def stratified_split(df: DataFrame, strat_cols: list, test_frac: float, seed: int):
@@ -22,25 +24,31 @@ def stratified_split(df: DataFrame, strat_cols: list, test_frac: float, seed: in
     return train_df, test_df
 
 
+FAST = os.getenv("FAST_MODE", "false").lower() == "true"
+
+
 def main() -> None:
     spark = get_spark("split")
     df = spark.read.parquet("data/processed/M.parquet")
     train, test = stratified_split(df, ["grade", "loan_status"], test_frac=0.2, seed=42)
     Path("data/processed").mkdir(parents=True, exist_ok=True)
+    n_partitions = 4 if FAST else 8
     (
-        train.coalesce(8)
+        train.coalesce(n_partitions)
         .write
         .option("maxRecordsPerFile", 250000)
         .mode("overwrite")
         .parquet("data/processed/train.parquet")
     )
     (
-        test.coalesce(8)
+        test.coalesce(n_partitions)
         .write
         .option("maxRecordsPerFile", 250000)
         .mode("overwrite")
         .parquet("data/processed/test.parquet")
     )
+
+    dump_metrics("split", {"train": train.count(), "test": test.count(), "fast": FAST})
 
 
 if __name__ == "__main__":

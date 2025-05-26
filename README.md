@@ -181,5 +181,15 @@ Este repositorio cumple con los requisitos de la actividad de Aprendizaje Superv
 
 Para evitar errores `OutOfMemoryError: Java heap space`, la sesión de Spark se crea con mayor memoria (8 GB para driver y ejecutores) y el servicio Docker `credit-risk-app` expone variables de entorno `_JAVA_OPTIONS`, `SPARK_DRIVER_MEMORY`, `SPARK_EXECUTOR_MEMORY` y `SPARK_DRIVER_MAXRESULTSIZE`.
 
+### Métricas offline
+Cada agente escribe un JSON en ./metrics.
+Úsalo así:
+
+```bash
+make clean-metrics
+make pipeline-fast
+jq '.' metrics/*.json
+```
+
 
 

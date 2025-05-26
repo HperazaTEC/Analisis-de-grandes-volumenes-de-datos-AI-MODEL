@@ -1,4 +1,24 @@
+version: "3.9"
+
 services:
+  # 1️⃣  MLflow (backend + UI)
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:///mlflow.db
+      --default-artifact-root ${MLFLOW_ARTIFACT_URI}
+      --host 0.0.0.0
+      --port 5000
+    ports:
+      - "5000:5000"
+    environment:
+      - MLFLOW_ARTIFACT_URI=${MLFLOW_ARTIFACT_URI}
+    volumes:
+      - ./mlruns:${MLFLOW_ARTIFACT_URI}   # artefactos host
+      - ./mlflow.db:/mlflow.db            # sqlite backend
+
+  # 2️⃣  Spark master (sin cambios)
   spark-master:
     image: bitnami/spark:latest
     environment:
@@ -6,14 +26,12 @@ services:
     ports:
       - "7077:7077"
       - "8080:8080"
-  mlflow:
-    image: ghcr.io/mlflow/mlflow:latest
-    ports:
-      - "5000:5000"
+
+  # 3️⃣  App de riesgo
   credit-risk-app:
     build:
-      context: ..                      # sigue usando la raíz
-      dockerfile: docker/Dockerfile    # aquí le dices dónde está
+      context: ..
+      dockerfile: docker/Dockerfile
     env_file:
       - ../.env
     environment:
@@ -22,12 +40,14 @@ services:
       - SPARK_EXECUTOR_MEMORY=8g
       - SPARK_DRIVER_MAXRESULTSIZE=3g
       - PYTHONPATH=/app
+      - FAST_MODE=${FAST_MODE}
+      - SAMPLE_FRACTION=${SAMPLE_FRACTION}
+      - METRICS_DIR=/app/${METRICS_DIR}
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
     depends_on:
       - spark-master
       - mlflow
     ports:
-      - "8000:8000"
-    deploy:
-      resources:
-        limits:
-          memory: 12g
+      - "8000:8000"        # FastAPI
+    volumes:
+      - ../metrics:/app/${METRICS_DIR}
