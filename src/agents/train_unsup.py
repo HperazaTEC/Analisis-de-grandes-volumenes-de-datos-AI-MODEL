@@ -7,6 +7,7 @@ import mlflow
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from src.utils.metrics import dump_metrics
 
 
 def main() -> None:
@@ -17,6 +18,7 @@ def main() -> None:
     except Exception as e:
         print(f"MLflow autologging not available: {e}")
 
+    FAST = os.getenv("FAST_MODE", "false").lower() == "true"
     spark = get_spark("train_unsup")
     train = spark.read.parquet("data/processed/train.parquet")
     feature_cols = [c for c in train.columns if c not in {"default_flag", "weight"}]
@@ -31,6 +33,7 @@ def main() -> None:
         with mlflow.start_run(run_name=name):
             pipeline = Pipeline(stages=[assembler, scaler, algo])
             model = pipeline.fit(train)
+            dump_metrics(f"train_unsup_{name}", {"rows": train.count(), "fast": FAST})
             mlflow.spark.log_model(model, f"models/unsupervised/{name}", registered_model_name=f"risk-clusters-{name}")
 
 

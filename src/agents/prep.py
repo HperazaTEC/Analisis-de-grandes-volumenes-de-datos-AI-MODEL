@@ -7,6 +7,7 @@ from src.utils.spark import get_spark
 from src.agents.split import stratified_split
 from pathlib import Path
 from dotenv import load_dotenv
+from src.utils.metrics import dump_metrics
 import unicodedata
 import os
 
@@ -45,6 +46,9 @@ def top_k(df, col, k=100):
     return df.withColumn(col, F.when(F.col(col).isin(cats), F.col(col)).otherwise("other"))
 
 
+FAST = os.getenv("FAST_MODE", "false").lower() == "true"
+
+
 def main() -> None:
     load_dotenv()
     spark = get_spark("prep")
@@ -62,6 +66,9 @@ def main() -> None:
         df = (
             spark.read.option("header", "true").option("inferSchema", "true").option("compression", "gzip").csv(str(src))
         )
+    if FAST:
+        sample_frac = float(os.getenv("SAMPLE_FRACTION", "0.05"))
+        df = df.sample(fraction=sample_frac, seed=42)
     if "_c0" in df.columns:
         df = df.drop("_c0")
 
@@ -111,6 +118,8 @@ def main() -> None:
 
     train.write.mode("overwrite").parquet(str(proc_dir / "train.parquet"))
     test.write.mode("overwrite").parquet(str(proc_dir / "test.parquet"))
+
+    dump_metrics("prep", {"rows": df.count(), "fast": FAST})
 
 
 
