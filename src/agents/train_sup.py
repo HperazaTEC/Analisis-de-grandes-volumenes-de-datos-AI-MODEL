@@ -1,20 +1,46 @@
 """Train supervised models on default_flag."""
-from pyspark.ml.classification import RandomForestClassifier, GBTClassifier, MultilayerPerceptronClassifier
-from pyspark.ml.feature import FeatureHasher
+import os
+
+# Disable noisy Spark autologging of datasets
+os.environ["MLFLOW_ENABLE_SPARK_DATASET_AUTOLOGGING"] = "false"
+
+from pyspark.ml.classification import (
+    RandomForestClassifier,
+    GBTClassifier,
+    MultilayerPerceptronClassifier,
+)
+from pyspark.ml.feature import (
+    StringIndexer,
+    OneHotEncoder,
+    VectorAssembler,
+)
 from pyspark.ml import Pipeline
-from pyspark.ml.evaluation import BinaryClassificationEvaluator
 from pyspark.sql import functions as F
 from src.utils.spark import get_spark
 from src.utils.balancing import add_weight_column
-from src.utils.metrics import dump_metrics
+from src.utils.metrics import METRICS_DIR
 import mlflow
-import os
 from pathlib import Path
 from dotenv import load_dotenv
 from py4j.protocol import Py4JJavaError
 import logging
 import sys
 import re
+import json
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import (
+    roc_auc_score,
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    average_precision_score,
+    confusion_matrix,
+    roc_curve,
+    precision_recall_curve,
+)
 
 
 
@@ -57,29 +83,67 @@ def main() -> int:
         cat_cols = [c for c, t in train.dtypes if t == "string" and c != target]
         train = train.fillna(0.0, subset=num_cols)
         test = test.fillna(0.0, subset=num_cols)
-        hasher = FeatureHasher(
-            inputCols=cat_cols + num_cols,
-            outputCol="features",
-            numFeatures=2 ** 14,
 
-        )
-    
         train = add_weight_column(train, target)
+
+        # Split into train/validation
+        train_df, val_df = train.randomSplit([0.8, 0.2], seed=seed)
+
+        # Preprocessing pipeline: StringIndexer -> OneHotEncoder -> VectorAssembler
+        indexers = [
+            StringIndexer(inputCol=c, outputCol=f"{c}_idx", handleInvalid="keep")
+            for c in cat_cols
+        ]
+        encoder = OneHotEncoder(
+            inputCols=[f"{c}_idx" for c in cat_cols],
+            outputCols=[f"{c}_ohe" for c in cat_cols],
+            dropLast=False,
+        )
+        assembler = VectorAssembler(
+            inputCols=num_cols + [f"{c}_ohe" for c in cat_cols],
+            outputCol="features",
+        )
+        prep_pipeline = Pipeline(stages=indexers + [encoder, assembler])
+        prep_model = prep_pipeline.fit(train_df)
+        train_pre = prep_model.transform(train_df)
+
+        n_features = train_pre.select("features").first()["features"].size
+
         models = {
-            "RandomForest": RandomForestClassifier(labelCol=target, featuresCol="features", weightCol="weight"),
-            "GBT": GBTClassifier(labelCol=target, featuresCol="features", weightCol="weight"),
-            "MLP": MultilayerPerceptronClassifier(labelCol=target, featuresCol="features",
-                                                   layers=[len(num_cols) + len(cat_cols), 10, 2])
+            "RandomForest": RandomForestClassifier(
+                labelCol=target,
+                featuresCol="features",
+                weightCol="weight",
+                seed=seed,
+            ),
+            "GBT": GBTClassifier(
+                labelCol=target,
+                featuresCol="features",
+                weightCol="weight",
+                seed=seed,
+            ),
         }
-    
-        evaluator = BinaryClassificationEvaluator(labelCol=target)
+        if not FAST:
+            layers = [n_features, 64, 32, 2]
+            models["MLP"] = MultilayerPerceptronClassifier(
+                labelCol=target,
+                featuresCol="features",
+                layers=layers,
+                seed=seed,
+            )
+
+        results = []
         Path("models/supervised").mkdir(parents=True, exist_ok=True)
         for name, algo in models.items():
-            with mlflow.start_run(run_name=name):
-                pipeline = Pipeline(stages=[hasher, algo])
+            with mlflow.start_run(run_name=name) as run:
+                pipeline = Pipeline(stages=[prep_model, algo])
                 retry_fraction = 1.0
                 while True:
-                    subset = train if retry_fraction >= 1.0 else train.sample(fraction=retry_fraction, seed=seed)
+                    subset = (
+                        train_df
+                        if retry_fraction >= 1.0
+                        else train_df.sample(fraction=retry_fraction, seed=seed)
+                    )
                     subset = subset.cache()
                     try:
                         model = pipeline.fit(subset)
@@ -97,13 +161,87 @@ def main() -> int:
                             logging.critical(str(e))
                             return 1
 
+                model.transform(val_df)  # ensure pipeline reused on validation
                 preds = model.transform(test)
-                auc = evaluator.evaluate(preds)
-                dump_metrics(f"train_sup_{name}", {"auc": auc, "rows": subset.count(), "fast": FAST})
-                mlflow.log_metric("auc", auc)
-                mlflow.spark.log_model(model, f"models/supervised/{name}", registered_model_name="credit-risk")
+                preds_pd = preds.select(target, "prediction", "probability").toPandas()
+                y_true = preds_pd[target].astype(int)
+                y_pred = preds_pd["prediction"].astype(int)
+                probs = np.array(preds_pd["probability"].tolist())[:, 1]
 
+                metrics = {
+                    "auc": float(roc_auc_score(y_true, probs)),
+                    "accuracy": float(accuracy_score(y_true, y_pred)),
+                    "precision": float(precision_score(y_true, y_pred, zero_division=0)),
+                    "recall": float(recall_score(y_true, y_pred, zero_division=0)),
+                    "f1": float(f1_score(y_true, y_pred, zero_division=0)),
+                    "pr_auc": float(average_precision_score(y_true, probs)),
+                    "rows": subset.count(),
+                    "fast": FAST,
+                }
 
+                run_dir = METRICS_DIR / run.info.run_id
+                run_dir.mkdir(parents=True, exist_ok=True)
+
+                with (run_dir / "metrics.json").open("w", encoding="utf-8") as f:
+                    json.dump(metrics, f, indent=2)
+
+                cm = confusion_matrix(y_true, y_pred)
+                pd.DataFrame(cm).to_csv(run_dir / "cmatrix.csv", index=False)
+                fig, ax = plt.subplots()
+                ax.imshow(cm, cmap="Blues")
+                ax.set_xlabel("Predicted")
+                ax.set_ylabel("True")
+                for i in range(cm.shape[0]):
+                    for j in range(cm.shape[1]):
+                        ax.text(j, i, int(cm[i, j]), ha="center", va="center")
+                plt.tight_layout()
+                fig.savefig(run_dir / "cmatrix.png")
+                plt.close(fig)
+
+                fpr, tpr, _ = roc_curve(y_true, probs)
+                fig, ax = plt.subplots()
+                ax.plot(fpr, tpr)
+                ax.set_xlabel("FPR")
+                ax.set_ylabel("TPR")
+                plt.tight_layout()
+                fig.savefig(run_dir / "roc.png")
+                plt.close(fig)
+
+                prec_c, rec_c, _ = precision_recall_curve(y_true, probs)
+                fig, ax = plt.subplots()
+                ax.plot(rec_c, prec_c)
+                ax.set_xlabel("Recall")
+                ax.set_ylabel("Precision")
+                plt.tight_layout()
+                fig.savefig(run_dir / "pr.png")
+                plt.close(fig)
+
+                if hasattr(model.stages[-1], "featureImportances"):
+                    fi = model.stages[-1].featureImportances.toArray().tolist()
+                    with (run_dir / "feature_importance.json").open("w", encoding="utf-8") as f:
+                        json.dump(fi, f)
+                    mlflow.log_artifact(str(run_dir / "feature_importance.json"))
+
+                mlflow.log_metrics({k: metrics[k] for k in ["auc", "accuracy", "precision", "recall", "f1", "pr_auc"]})
+                mlflow.log_artifact(str(run_dir / "metrics.json"))
+                mlflow.log_artifact(str(run_dir / "cmatrix.csv"))
+                mlflow.log_artifact(str(run_dir / "cmatrix.png"))
+                mlflow.log_artifact(str(run_dir / "roc.png"))
+                mlflow.log_artifact(str(run_dir / "pr.png"))
+
+                mlflow.spark.log_model(
+                    model,
+                    f"models/supervised/{name}",
+                    registered_model_name="credit-risk",
+                )
+
+                results.append({
+                    "model": name,
+                    **{k: metrics[k] for k in ["auc", "accuracy", "precision", "recall", "f1", "pr_auc"]},
+                })
+
+        summary_df = pd.DataFrame(results)
+        print(summary_df)
         return 0
     finally:
         spark.stop()
