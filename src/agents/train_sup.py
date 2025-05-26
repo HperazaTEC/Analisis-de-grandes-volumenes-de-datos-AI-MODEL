@@ -16,6 +16,7 @@ import sys
 import re
 
 
+
 def main() -> int:
     load_dotenv()
 
@@ -86,10 +87,12 @@ def main() -> int:
                         else:
                             logging.critical(str(e))
                             return 1
+
                 preds = model.transform(test)
                 auc = evaluator.evaluate(preds)
                 mlflow.log_metric("auc", auc)
                 mlflow.spark.log_model(model, f"models/supervised/{name}", registered_model_name="credit-risk")
+
 
         return 0
     finally:
