@@ -29,7 +29,10 @@ FAST = os.getenv("FAST_MODE", "false").lower() == "true"
 
 def main() -> None:
     spark = get_spark("split")
-    df = spark.read.parquet("data/processed/M.parquet")
+    data_path = Path("data/processed") / ("M_fast.parquet" if FAST else "M_full.parquet")
+    if not data_path.exists():
+        raise FileNotFoundError(f"{data_path} not found. Run prep.py first.")
+    df = spark.read.parquet(str(data_path))
     train, test = stratified_split(df, ["grade", "loan_status"], test_frac=0.2, seed=42)
     Path("data/processed").mkdir(parents=True, exist_ok=True)
     n_partitions = 4 if FAST else 8
