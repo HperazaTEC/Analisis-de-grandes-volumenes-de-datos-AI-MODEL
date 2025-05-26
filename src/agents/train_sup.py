@@ -47,13 +47,16 @@ def main() -> int:
             )
     
         # Basic preprocessing
-        cat_cols = [c for c, t in train.dtypes if t == "string" and c != target]
         num_cols = [c for c, t in train.dtypes if t != "string" and c != target]
+        cat_cols = [c for c, t in train.dtypes if t == "string" and c != target]
+        train = train.fillna(0.0, subset=num_cols)
+        test = test.fillna(0.0, subset=num_cols)
         indexers = [StringIndexer(inputCol=c, outputCol=f"{c}_idx", handleInvalid="keep") for c in cat_cols]
-        encoders = [OneHotEncoder(inputCol=f"{c}_idx", outputCol=f"{c}_oh") for c in cat_cols]
+        encoders = [OneHotEncoder(inputCol=f"{c}_idx", outputCol=f"{c}_oh", handleInvalid="keep") for c in cat_cols]
         assembler = VectorAssembler(
             inputCols=num_cols + [f"{c}_oh" for c in cat_cols],
-            outputCol="features"
+            outputCol="features",
+            handleInvalid="keep",
         )
     
         train = add_weight_column(train, target)
@@ -72,6 +75,7 @@ def main() -> int:
                 retry_fraction = 1.0
                 while True:
                     subset = train if retry_fraction >= 1.0 else train.sample(fraction=retry_fraction, seed=seed)
+                    subset = subset.cache()
                     try:
                         model = pipeline.fit(subset)
                         break

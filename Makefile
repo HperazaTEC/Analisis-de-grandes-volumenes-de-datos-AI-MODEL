@@ -8,7 +8,6 @@ pipeline:
 		bash -c "export PYTHONPATH=/app && \
 			python src/agents/fetch.py && \
 			python src/agents/prep.py  && \
-			python src/agents/split.py && \
 			python src/agents/train_sup.py  && \
 			python src/agents/train_unsup.py && \
 			python src/agents/evaluate.py   && \
