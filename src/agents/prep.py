@@ -1,10 +1,9 @@
 
-"""Clean raw LendingClub data and create train/test splits."""
+"""Clean raw LendingClub data and generate a processed dataset."""
 
 from pyspark.sql import functions as F
 from pyspark.sql.types import StringType
 from src.utils.spark import get_spark
-from src.agents.split import stratified_split
 from pathlib import Path
 from dotenv import load_dotenv
 from src.utils.metrics import dump_metrics
@@ -55,6 +54,7 @@ def main() -> None:
     src = Path(os.environ.get("RAW_DATA", "data/raw/Loan_status_2007-2020Q3.gzip"))
     proc_dir = Path("data/processed")
     proc_dir.mkdir(parents=True, exist_ok=True)
+    out_file = proc_dir / ("M_fast.parquet" if FAST else "M_full.parquet")
 
     raw_dir = src.parent
     parts = sorted(raw_dir.glob("loan_data_2007_2020Q*.csv"))
@@ -113,11 +113,7 @@ def main() -> None:
     for c in cat_cols:
         df = top_k(df, c, 100)
 
-
-    train, test = stratified_split(df, ["grade", "loan_status"], test_frac=0.2, seed=42)
-
-    train.write.mode("overwrite").parquet(str(proc_dir / "train.parquet"))
-    test.write.mode("overwrite").parquet(str(proc_dir / "test.parquet"))
+    df.write.mode("overwrite").parquet(str(out_file))
 
     dump_metrics("prep", {"rows": df.count(), "fast": FAST})
 

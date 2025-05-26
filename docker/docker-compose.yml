@@ -52,3 +52,4 @@ services:
       - "8000:8000"
     volumes:
       - ../metrics:/app/${METRICS_DIR}
+      - ../data:/app/data
