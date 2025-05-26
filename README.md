@@ -198,4 +198,4 @@ jq '.' metrics/*.json
 - Se reescribieron los agentes de entrenamiento no supervisado simplificando el pipeline.
 - El agente de entrenamiento supervisado implementa preprocesamiento robusto y registra nuevas métricas.
 - Se corrigió la construcción de la imagen Docker añadiendo la dependencia `wget`.
-- Se creó `Documentación/Actividad_descripción.md` con un resumen extendido del proyecto.
+
