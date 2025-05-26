@@ -12,6 +12,7 @@ def get_spark(app_name: str = "credit-risk") -> SparkSession:
     digits = re.findall(r"\d+(?:\.\d+)?", mem_str)
     driver_mem_gb = float(digits[0]) if digits else 10.0
 
+
     builder = (
         SparkSession.builder
         .appName(app_name)

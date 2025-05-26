@@ -32,6 +32,7 @@ def _normalize(text: str) -> str:
     return text.lower()
 
 
+
 def top_k(df, col, k=100):
     cats = (
         df.groupBy(col)
@@ -104,6 +105,7 @@ def main() -> None:
 
     for c in cat_cols:
         df = top_k(df, c, 100)
+
 
     train, test = stratified_split(df, ["grade", "loan_status"], test_frac=0.2, seed=42)
 

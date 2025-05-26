@@ -59,6 +59,7 @@ def main() -> int:
             inputCols=cat_cols + num_cols,
             outputCol="features",
             numFeatures=2 ** 14,
+
         )
     
         train = add_weight_column(train, target)
