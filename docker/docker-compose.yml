@@ -1,24 +1,25 @@
-version: "3.9"
-
+# docker/docker-compose.yml
 services:
   # 1️⃣  MLflow (backend + UI)
   mlflow:
     image: ghcr.io/mlflow/mlflow:latest
-    command: >
-      mlflow server
-      --backend-store-uri sqlite:///mlflow.db
-      --default-artifact-root ${MLFLOW_ARTIFACT_URI}
-      --host 0.0.0.0
-      --port 5000
+    command:
+      - mlflow
+      - server
+      - --backend-store-uri=sqlite:///data/mlflow.db
+      - --default-artifact-root=/mlruns
+      - --host=0.0.0.0
+      - --port=5000
     ports:
       - "5000:5000"
     environment:
-      - MLFLOW_ARTIFACT_URI=${MLFLOW_ARTIFACT_URI}
+      - MLFLOW_ARTIFACT_URI=/mlruns
     volumes:
-      - ./mlruns:${MLFLOW_ARTIFACT_URI}   # artefactos host
-      - ./mlflow.db:/mlflow.db            # sqlite backend
+      # ← el compose está en docker/, así que “../” apunta a la raíz del repo
+      - ../mlruns:/mlruns
+      - ../mlflow-data:/data
 
-  # 2️⃣  Spark master (sin cambios)
+  # 2️⃣  Spark master
   spark-master:
     image: bitnami/spark:latest
     environment:
@@ -27,7 +28,7 @@ services:
       - "7077:7077"
       - "8080:8080"
 
-  # 3️⃣  App de riesgo
+  # 3️⃣  API ­credit-risk + agentes
   credit-risk-app:
     build:
       context: ..
@@ -48,6 +49,6 @@ services:
       - spark-master
       - mlflow
     ports:
-      - "8000:8000"        # FastAPI
+      - "8000:8000"
     volumes:
       - ../metrics:/app/${METRICS_DIR}
