@@ -17,8 +17,8 @@ services:
     env_file:
       - ../.env
     environment:
-      - _JAVA_OPTIONS=-Xms6g -Xmx10g
-      - SPARK_DRIVER_MEMORY=8g
+      - _JAVA_OPTIONS=-Xms8g -Xmx12g
+      - SPARK_DRIVER_MEMORY=10g
       - SPARK_EXECUTOR_MEMORY=8g
       - SPARK_DRIVER_MAXRESULTSIZE=3g
       - PYTHONPATH=/app

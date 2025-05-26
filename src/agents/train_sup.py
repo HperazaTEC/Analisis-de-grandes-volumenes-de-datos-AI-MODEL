@@ -1,6 +1,6 @@
 """Train supervised models on default_flag."""
 from pyspark.ml.classification import RandomForestClassifier, GBTClassifier, MultilayerPerceptronClassifier
-from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler
+from pyspark.ml.feature import FeatureHasher
 from pyspark.ml import Pipeline
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
 from pyspark.sql import functions as F
@@ -28,16 +28,20 @@ def main() -> int:
     seed = 42
 
     spark = get_spark("train_sup")
+    spark.conf.set("spark.python.worker.broadcastTimeout", "600")
     try:
         train = spark.read.parquet("data/processed/train.parquet")
         test = spark.read.parquet("data/processed/test.parquet")
         target = "default_flag"
+
+        train = train.cache()
+        test = test.cache()
     
         # Auto-detect available driver memory (GB) and compute batch factor
         mem_str = os.environ.get("SPARK_DRIVER_MEMORY", "6")
         digits = re.findall(r"\d+(?:\.\d+)?", mem_str)
         driver_mem_gb = float(digits[0]) if digits else 6.0
-        max_rows = int(2_000_000 * (driver_mem_gb / 6))
+        max_rows = int(1_000_000 * (driver_mem_gb / 6))
         total_rows = train.count()
         if total_rows > max_rows:
             fraction = max_rows / total_rows
@@ -47,13 +51,14 @@ def main() -> int:
             )
     
         # Basic preprocessing
-        cat_cols = [c for c, t in train.dtypes if t == "string" and c != target]
         num_cols = [c for c, t in train.dtypes if t != "string" and c != target]
-        indexers = [StringIndexer(inputCol=c, outputCol=f"{c}_idx", handleInvalid="keep") for c in cat_cols]
-        encoders = [OneHotEncoder(inputCol=f"{c}_idx", outputCol=f"{c}_oh") for c in cat_cols]
-        assembler = VectorAssembler(
-            inputCols=num_cols + [f"{c}_oh" for c in cat_cols],
-            outputCol="features"
+        cat_cols = [c for c, t in train.dtypes if t == "string" and c != target]
+        train = train.fillna(0.0, subset=num_cols)
+        test = test.fillna(0.0, subset=num_cols)
+        hasher = FeatureHasher(
+            inputCols=cat_cols + num_cols,
+            outputCol="features",
+            numFeatures=2 ** 14,
         )
     
         train = add_weight_column(train, target)
@@ -68,10 +73,11 @@ def main() -> int:
         Path("models/supervised").mkdir(parents=True, exist_ok=True)
         for name, algo in models.items():
             with mlflow.start_run(run_name=name):
-                pipeline = Pipeline(stages=indexers + encoders + [assembler, algo])
+                pipeline = Pipeline(stages=[hasher, algo])
                 retry_fraction = 1.0
                 while True:
                     subset = train if retry_fraction >= 1.0 else train.sample(fraction=retry_fraction, seed=seed)
+                    subset = subset.cache()
                     try:
                         model = pipeline.fit(subset)
                         break
