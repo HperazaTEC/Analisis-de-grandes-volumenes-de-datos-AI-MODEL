@@ -4,17 +4,20 @@ import os
 # Disable noisy Spark autologging of datasets
 os.environ["MLFLOW_ENABLE_SPARK_DATASET_AUTOLOGGING"] = "false"
 
-from pyspark.ml.classification import (
-    RandomForestClassifier,
-    GBTClassifier,
-    MultilayerPerceptronClassifier,
-)
+    from pyspark.ml.classification import (
+        RandomForestClassifier,
+        GBTClassifier,
+        MultilayerPerceptronClassifier,
+        LogisticRegression,
+    )
 from pyspark.ml.feature import (
     StringIndexer,
     OneHotEncoder,
     VectorAssembler,
 )
 from pyspark.ml import Pipeline
+from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
+from pyspark.ml.evaluation import BinaryClassificationEvaluator
 from pyspark.sql import functions as F
 from src.utils.spark import get_spark
 from src.utils.balancing import add_weight_column
@@ -140,6 +143,11 @@ def main() -> int:
         n_features = train_pre.select("features").first()["features"].size
 
         models = {
+            "LogisticRegression": LogisticRegression(
+                labelCol=target,
+                featuresCol="features",
+                weightCol="weight",
+            ),
             "RandomForest": RandomForestClassifier(
                 labelCol=target,
                 featuresCol="features",
@@ -159,14 +167,45 @@ def main() -> int:
                 labelCol=target,
                 featuresCol="features",
                 layers=layers,
+                weightCol="weight",
                 seed=seed,
             )
 
         results = []
+        evaluator = BinaryClassificationEvaluator(labelCol=target)
         Path("models/supervised").mkdir(parents=True, exist_ok=True)
         for name, algo in models.items():
             with mlflow.start_run(run_name=name) as run:
                 pipeline = Pipeline(stages=[prep_model, algo])
+                if name == "RandomForest":
+                    param_grid = (
+                        ParamGridBuilder()
+                        .addGrid(algo.maxDepth, [5, 10])
+                        .addGrid(algo.numTrees, [20, 50])
+                        .build()
+                    )
+                elif name == "GBT":
+                    param_grid = (
+                        ParamGridBuilder()
+                        .addGrid(algo.maxDepth, [5, 10])
+                        .addGrid(algo.maxIter, [20, 50])
+                        .addGrid(algo.stepSize, [0.05, 0.1])
+                        .build()
+                    )
+                else:
+                    param_grid = []
+
+                cv = (
+                    CrossValidator(
+                        estimator=pipeline,
+                        estimatorParamMaps=param_grid,
+                        evaluator=evaluator,
+                        numFolds=3,
+                    )
+                    if param_grid
+                    else None
+                )
+
                 retry_fraction = 1.0
                 while True:
                     subset = (
@@ -176,7 +215,12 @@ def main() -> int:
                     )
                     subset = subset.cache()
                     try:
-                        model = pipeline.fit(subset)
+                        if cv:
+                            model = cv.fit(subset)
+                            best_stage = model.bestModel.stages[-1]
+                        else:
+                            model = pipeline.fit(subset)
+                            best_stage = model.stages[-1]
                         break
                     except (Py4JJavaError, MemoryError) as e:
                         if "java.lang.OutOfMemoryError" in str(e):
@@ -205,6 +249,17 @@ def main() -> int:
                     "rows": subset.count(),
                     "fast": FAST,
                 }
+
+                best_params = {}
+                if name == "RandomForest":
+                    best_params["maxDepth"] = best_stage.getOrDefault("maxDepth")
+                    best_params["numTrees"] = best_stage.getNumTrees()
+                elif name == "GBT":
+                    best_params["maxDepth"] = best_stage.getOrDefault("maxDepth")
+                    best_params["maxIter"] = best_stage.getMaxIter()
+                    best_params["stepSize"] = best_stage.getStepSize()
+                if best_params:
+                    mlflow.log_params(best_params)
 
                 run_dir = METRICS_DIR / run.info.run_id
                 run_dir.mkdir(parents=True, exist_ok=True)
@@ -261,6 +316,7 @@ def main() -> int:
 
                 if hasattr(model.stages[-1], "featureImportances"):
                     fi = model.stages[-1].featureImportances.toArray().tolist()
+
                     with (run_dir / "feature_importance.json").open("w", encoding="utf-8") as f:
                         json.dump(fi, f)
                     mlflow.log_artifact(str(run_dir / "feature_importance.json"))
@@ -275,7 +331,7 @@ def main() -> int:
                 mlflow.log_artifact(str(run_dir / "learning_curve.png"))
 
                 mlflow.spark.log_model(
-                    model,
+                    model.bestModel if cv else model,
                     f"models/supervised/{name}",
                     registered_model_name="credit-risk",
                 )
