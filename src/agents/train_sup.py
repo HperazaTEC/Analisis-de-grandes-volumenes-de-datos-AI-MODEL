@@ -4,11 +4,12 @@ import os
 # Disable noisy Spark autologging of datasets
 os.environ["MLFLOW_ENABLE_SPARK_DATASET_AUTOLOGGING"] = "false"
 
-from pyspark.ml.classification import (
-    RandomForestClassifier,
-    GBTClassifier,
-    MultilayerPerceptronClassifier,
-)
+    from pyspark.ml.classification import (
+        RandomForestClassifier,
+        GBTClassifier,
+        MultilayerPerceptronClassifier,
+        LogisticRegression,
+    )
 from pyspark.ml.feature import (
     StringIndexer,
     OneHotEncoder,
@@ -110,6 +111,11 @@ def main() -> int:
         n_features = train_pre.select("features").first()["features"].size
 
         models = {
+            "LogisticRegression": LogisticRegression(
+                labelCol=target,
+                featuresCol="features",
+                weightCol="weight",
+            ),
             "RandomForest": RandomForestClassifier(
                 labelCol=target,
                 featuresCol="features",
@@ -129,6 +135,7 @@ def main() -> int:
                 labelCol=target,
                 featuresCol="features",
                 layers=layers,
+                weightCol="weight",
                 seed=seed,
             )
 
