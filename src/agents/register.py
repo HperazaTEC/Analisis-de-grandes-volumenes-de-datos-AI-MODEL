@@ -11,7 +11,11 @@ def main() -> None:
     runs = mlflow.search_runs(order_by=["metrics.auc DESC"], max_results=1)
     if not runs.empty:
         run_id = runs.loc[0, "run_id"]
-        client.create_model_version(name="credit-risk", source=f"models:/credit-risk/{run_id}", run_id=run_id)
+        client.create_model_version(
+            name="credit-risk",
+            source=f"runs:/{run_id}/model",
+            run_id=run_id,
+        )
 
 
 if __name__ == "__main__":
