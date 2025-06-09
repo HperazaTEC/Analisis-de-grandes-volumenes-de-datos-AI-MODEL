@@ -1,55 +1,60 @@
-# docker/docker-compose.yml
 services:
-  # 1️⃣  MLflow (backend + UI)
+  # 1️⃣ MLflow (backend + UI)
   mlflow:
-    image: ghcr.io/mlflow/mlflow:latest
-    command:
-      - mlflow
-      - server
-      - --backend-store-uri=sqlite:///data/mlflow.db
-      - --default-artifact-root=/mlruns
-      - --host=0.0.0.0
-      - --port=5000
+    image: ghcr.io/mlflow/mlflow:v2.22.1      # tag correcto (lleva la “v”)
+    command: >
+      mlflow server
+      --backend-store-uri=sqlite:///data/mlflow.db
+      --default-artifact-root=/mlruns
+      --host=0.0.0.0
+      --port=5000
     ports:
       - "5000:5000"
     environment:
-      - MLFLOW_ARTIFACT_URI=/mlruns
+      MLFLOW_ARTIFACT_URI: /mlruns
     volumes:
-      # ← el compose está en docker/, así que “../” apunta a la raíz del repo
-      - ../mlruns:/mlruns
-      - ../mlflow-data:/data
+      - ../mlruns:/mlruns            # artefactos
+      - ../mlflow-data:/data         # base de datos SQLite
 
-  # 2️⃣  Spark master
+  # 2️⃣ Spark master
   spark-master:
-    image: bitnami/spark:latest
+    image: bitnami/spark:3.5.6       # Spark 3.5 + Scala 2.13 + JDK 17
     environment:
-      - SPARK_MODE=master
+      SPARK_MODE: master
     ports:
       - "7077:7077"
       - "8080:8080"
 
-  # 3️⃣  API ­credit-risk + agentes
+  # 3️⃣ API credit-risk + agentes
   credit-risk-app:
     build:
       context: ..
       dockerfile: docker/Dockerfile
+      args:                          # llegan al Dockerfile como ARG
+        MLFLOW_SPARK_VERSION: "2.22.1"
+        SCALA_SUFFIX: "2.13"
     env_file:
-      - ../.env
+      - ../.env                      # puede estar vacío, pero que exista
     environment:
-      - _JAVA_OPTIONS=-Xms8g -Xmx12g
-      - SPARK_DRIVER_MEMORY=10g
-      - SPARK_EXECUTOR_MEMORY=8g
-      - SPARK_DRIVER_MAXRESULTSIZE=3g
-      - PYTHONPATH=/app
-      - FAST_MODE=${FAST_MODE}
-      - SAMPLE_FRACTION=${SAMPLE_FRACTION}
-      - METRICS_DIR=/app/${METRICS_DIR}
-      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      _JAVA_OPTIONS: "-Xms8g -Xmx12g"
+      SPARK_DRIVER_MEMORY: 10g
+      SPARK_EXECUTOR_MEMORY: 8g
+      SPARK_DRIVER_MAXRESULTSIZE: 3g
+      SPARK_MASTER_URL: spark://spark-master:7077
+      PYTHONPATH: /app
+      FAST_MODE: ${FAST_MODE:-false}
+      SAMPLE_FRACTION: ${SAMPLE_FRACTION:-1.0}
+      METRICS_DIR: ${METRICS_DIR:-metrics}
+      MLFLOW_TRACKING_URI: http://mlflow:5000
     depends_on:
       - spark-master
       - mlflow
     ports:
       - "8000:8000"
     volumes:
-      - ../metrics:/app/${METRICS_DIR}
+      - ../metrics:/app/${METRICS_DIR:-metrics}
       - ../data:/app/data
+
+networks:
+  default:
+    name: credit-risk-net
