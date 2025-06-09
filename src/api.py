@@ -21,7 +21,7 @@ def predict(features: dict):
         return {"error": "model not loaded"}
     import pandas as pd
     df = pd.DataFrame([features])
-    spark = mlflow.spark.get_active_session() or SparkSession.builder.getOrCreate()
+    spark = SparkSession.getActiveSession() or SparkSession.builder.getOrCreate()
     sdf = spark.createDataFrame(df)
     preds = model.transform(sdf).toPandas()
     return {"prediction": preds['prediction'].iloc[0]}
