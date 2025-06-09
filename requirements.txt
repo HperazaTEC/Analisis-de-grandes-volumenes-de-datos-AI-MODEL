@@ -12,6 +12,7 @@ scikit-learn==1.4.2      # Métricas y modelos fuera de Spark
 optuna==3.5.0            # HPO opcional
 joblib==1.4.2            # Serialización utilitaria
 matplotlib==3.8.4        # Gráficas rápidas
+seaborn==0.13.2          # Visualización estadística
 
 # --- Serving API ---
 fastapi==0.111.0
