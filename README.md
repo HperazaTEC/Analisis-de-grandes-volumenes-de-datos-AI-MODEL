@@ -92,3 +92,9 @@ Al finalizar, la interfaz de MLflow estará disponible en `http://localhost:5000
 ```
 
 Consulte `AGENTS.md` para una descripción detallada de cada agente y de la arquitectura general.
+
+El archivo `requirements.txt` ya incluye `pyspark`, por lo que no es necesario
+instalarlo de manera independiente. Dicho paquete es necesario tanto para
+ejecutar las pruebas unitarias como para correr los notebooks de la **Actividad
+4**. De forma opcional se provee `requirements-dev.txt` únicamente como un
+archivo de conveniencia para recrear el entorno de desarrollo.
