@@ -80,6 +80,7 @@ contar con `pyspark`. Puede instalarse manualmente mediante
 `pip install pyspark` o bien utilizando el archivo
 `requirements-dev.txt` incluido para facilitar la configuración local.
 
+
 ## Estructura principal del repositorio
 
 ```text
