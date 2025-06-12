@@ -72,6 +72,10 @@ Estos pasos deben ejecutarse en el siguiente orden:
 
 Al finalizar, la interfaz de MLflow estará disponible en `http://localhost:5000` y la API de predicción en `http://localhost:8000/predict`.
 
+El cuaderno `notebooks/Actividad5_VisualizacionResultados.ipynb` resume la validación
+cruzada estratificada realizada en la **Actividad 5** y muestra las métricas y
+gráficas obtenidas para cada fold.
+
 ## Estructura principal del repositorio
 
 ```text
