@@ -1,3 +1,5 @@
-# Development requirements
+
 -r requirements.txt
-pyspark==3.5.1
+jupyter
+ipykernel
+
