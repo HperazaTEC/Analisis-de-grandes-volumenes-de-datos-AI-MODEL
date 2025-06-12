@@ -72,6 +72,15 @@ Estos pasos deben ejecutarse en el siguiente orden:
 
 Al finalizar, la interfaz de MLflow estará disponible en `http://localhost:5000` y la API de predicción en `http://localhost:8000/predict`.
 
+## Instalación
+
+Este proyecto requiere **Python 3.10+** y las dependencias listadas en
+`requirements.txt`. Para ejecutar las pruebas unitarias es necesario
+contar con `pyspark`. Puede instalarse manualmente mediante
+`pip install pyspark` o bien utilizando el archivo
+`requirements-dev.txt` incluido para facilitar la configuración local.
+
+
 ## Estructura principal del repositorio
 
 ```text
@@ -100,3 +109,8 @@ El notebook de métricas se encuentra en [`notebooks/Metricas_A01795125.ipynb`](
 1. Instale el entorno local con `pip install -r requirements.txt`.
 2. Inicie Jupyter con `jupyter notebook` o `jupyter lab` desde la raíz del repositorio.
 3. Abra el archivo `Metricas_A01795125.ipynb` y ejecute las celdas en orden.
+El archivo `requirements.txt` ya incluye `pyspark`, por lo que no es necesario
+instalarlo de manera independiente. Dicho paquete es necesario tanto para
+ejecutar las pruebas unitarias como para correr los notebooks de la **Actividad
+4**. De forma opcional se provee `requirements-dev.txt` únicamente como un
+archivo de conveniencia para recrear el entorno de desarrollo.
