@@ -92,3 +92,11 @@ Al finalizar, la interfaz de MLflow estará disponible en `http://localhost:5000
 ```
 
 Consulte `AGENTS.md` para una descripción detallada de cada agente y de la arquitectura general.
+
+## Actividad 4
+
+El notebook de métricas se encuentra en [`notebooks/Metricas_A01795125.ipynb`](notebooks/Metricas_A01795125.ipynb). Para ejecutarlo con las dependencias del proyecto:
+
+1. Instale el entorno local con `pip install -r requirements.txt`.
+2. Inicie Jupyter con `jupyter notebook` o `jupyter lab` desde la raíz del repositorio.
+3. Abra el archivo `Metricas_A01795125.ipynb` y ejecute las celdas en orden.
